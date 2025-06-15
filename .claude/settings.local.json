@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app:*)",
+      "Bash *",
+      "Bash(:*)",
+      "Bash(npm install:*)",
+      "Bash(npm :*)",
+      "Bash(npx :*)",
+      "Bash(npx prisma:*)",
+      "Bash(npx create-strapi-app:*)"
+    ],
+    "deny": []
+  }
+}
