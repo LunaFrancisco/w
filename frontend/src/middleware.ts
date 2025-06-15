@@ -46,7 +46,7 @@ export default auth((req) => {
   const userRole = session.user?.role
 
   // Handle role-based access control
-  if (pathname.startsWith('/(portal)') || pathname.startsWith('/dashboard') || pathname.startsWith('/productos') || pathname.startsWith('/carrito') || pathname.startsWith('/pedidos') || pathname.startsWith('/perfil')) {
+  if (pathname.startsWith('/(portal)') || pathname.startsWith('/dashboard') || pathname.startsWith('/productos') || pathname.startsWith('/carrito') || pathname.startsWith('/pedidos') || pathname.startsWith('/perfil') || pathname.startsWith('/checkout')) {
     // Portal routes require CLIENT or ADMIN role
     if (userRole === 'PENDING') {
       return NextResponse.redirect(new URL('/auth/pending', req.url))

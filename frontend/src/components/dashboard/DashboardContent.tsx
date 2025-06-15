@@ -39,6 +39,18 @@ interface DashboardStats {
   totalSpent: number
 }
 
+interface RecentOrder {
+  id: string
+  status: string
+  total: number
+  createdAt: string
+  items: Array<{
+    product: {
+      name: string
+    }
+  }>
+}
+
 export default function DashboardContent({ user }: DashboardContentProps) {
   const [stats, setStats] = useState<DashboardStats>({
     totalOrders: 0,
@@ -46,21 +58,47 @@ export default function DashboardContent({ user }: DashboardContentProps) {
     completedOrders: 0,
     totalSpent: 0
   })
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Mock data for now - in real app this would come from API
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setStats({
-        totalOrders: 12,
-        pendingOrders: 2,
-        completedOrders: 10,
-        totalSpent: 2450000
-      })
-      setIsLoading(false)
-    }, 1000)
+    fetchUserStats()
+    fetchRecentOrders()
   }, [])
+
+  const fetchUserStats = async () => {
+    try {
+      const response = await fetch('/api/user/stats')
+      if (!response.ok) throw new Error('Error al cargar estadísticas')
+      
+      const data = await response.json()
+      setStats(data)
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+      setStats({
+        totalOrders: 0,
+        pendingOrders: 0,
+        completedOrders: 0,
+        totalSpent: 0
+      })
+    }
+  }
+
+  const fetchRecentOrders = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/user/orders?limit=3')
+      if (!response.ok) throw new Error('Error al cargar pedidos')
+      
+      const data = await response.json()
+      setRecentOrders(data)
+    } catch (error) {
+      console.error('Error fetching recent orders:', error)
+      setRecentOrders([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/' })
@@ -196,54 +234,90 @@ export default function DashboardContent({ user }: DashboardContentProps) {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Mock recent orders */}
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Pedido #001234</p>
-                    <p className="text-sm text-muted-foreground">iPhone 15 Pro Max + AirPods</p>
-                  </div>
+              {recentOrders.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No tienes pedidos recientes</p>
+                  <Button asChild className="mt-3" size="sm">
+                    <Link href="/productos">Explorar productos</Link>
+                  </Button>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">{formatCurrency(1588000)}</p>
-                  <p className="text-sm text-green-600">Entregado</p>
-                </div>
-              </div>
+              ) : (
+                recentOrders.map((order) => {
+                  const getStatusIcon = (status: string) => {
+                    switch (status) {
+                      case 'DELIVERED':
+                        return <CheckCircle className="w-5 h-5 text-green-600" />
+                      case 'SHIPPED':
+                        return <Truck className="w-5 h-5 text-blue-600" />
+                      case 'PREPARING':
+                        return <Package className="w-5 h-5 text-purple-600" />
+                      case 'PAID':
+                        return <CheckCircle className="w-5 h-5 text-blue-600" />
+                      default:
+                        return <Clock className="w-5 h-5 text-orange-600" />
+                    }
+                  }
 
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Truck className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Pedido #001235</p>
-                    <p className="text-sm text-muted-foreground">MacBook Air M3</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">{formatCurrency(1650000)}</p>
-                  <p className="text-sm text-blue-600">En camino</p>
-                </div>
-              </div>
+                  const getStatusText = (status: string) => {
+                    switch (status) {
+                      case 'DELIVERED': return 'Entregado'
+                      case 'SHIPPED': return 'En camino'
+                      case 'PREPARING': return 'Preparando'
+                      case 'PAID': return 'Pagado'
+                      case 'PENDING': return 'Pendiente'
+                      default: return status
+                    }
+                  }
 
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Pedido #001236</p>
-                    <p className="text-sm text-muted-foreground">Zapatillas Nike Jordan</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">{formatCurrency(180000)}</p>
-                  <p className="text-sm text-orange-600">Preparando</p>
-                </div>
-              </div>
+                  const getStatusColor = (status: string) => {
+                    switch (status) {
+                      case 'DELIVERED': return 'text-green-600'
+                      case 'SHIPPED': return 'text-blue-600'
+                      case 'PREPARING': return 'text-purple-600'
+                      case 'PAID': return 'text-blue-600'
+                      default: return 'text-orange-600'
+                    }
+                  }
+
+                  const getBgColor = (status: string) => {
+                    switch (status) {
+                      case 'DELIVERED': return 'bg-green-100'
+                      case 'SHIPPED': return 'bg-blue-100'
+                      case 'PREPARING': return 'bg-purple-100'
+                      case 'PAID': return 'bg-blue-100'
+                      default: return 'bg-orange-100'
+                    }
+                  }
+
+                  const productNames = order.items.map(item => item.product.name).join(', ')
+                  const shortProductNames = productNames.length > 40 
+                    ? productNames.substring(0, 40) + '...' 
+                    : productNames
+
+                  return (
+                    <div key={order.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 ${getBgColor(order.status)} rounded-full flex items-center justify-center`}>
+                          {getStatusIcon(order.status)}
+                        </div>
+                        <div>
+                          <p className="font-medium">Pedido #{order.id.slice(-8).toUpperCase()}</p>
+                          <p className="text-sm text-muted-foreground" title={productNames}>
+                            {shortProductNames}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(order.total)}</p>
+                        <p className={`text-sm ${getStatusColor(order.status)}`}>
+                          {getStatusText(order.status)}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
             </CardContent>
           </Card>
 
@@ -265,6 +339,18 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                   </div>
                 </Link>
               </Button>
+
+              {user.role === 'ADMIN' && (
+                <Button asChild className="w-full justify-start h-auto p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-900 hover:from-blue-100 hover:to-indigo-100">
+                  <Link href="/admin/dashboard">
+                    <Settings className="w-5 h-5 mr-3" />
+                    <div className="text-left">
+                      <p className="font-medium">Panel de Administración</p>
+                      <p className="text-sm opacity-70">Gestionar usuarios, productos y pedidos</p>
+                    </div>
+                  </Link>
+                </Button>
+              )}
 
               <Button asChild variant="outline" className="w-full justify-start h-auto p-4">
                 <Link href="/carrito">

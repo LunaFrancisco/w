@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import StaticNavigation from '@/components/StaticNavigation'
+import NavigationClient from '@/components/NavigationClient'
 import Footer from '@/components/Footer'
+import { SessionProvider } from '@/components/SessionProvider'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,15 +22,17 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${inter.className} min-h-screen flex flex-col`}>
-        {/* Skip link for accessibility */}
-        <a href="#main-content" className="skip-link">
-          Saltar al contenido principal
-        </a>
-        <StaticNavigation />
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <SessionProvider>
+          {/* Skip link for accessibility */}
+          <a href="#main-content" className="skip-link">
+            Saltar al contenido principal
+          </a>
+          <NavigationClient />
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </SessionProvider>
       </body>
     </html>
   );
