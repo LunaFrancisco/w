@@ -9,6 +9,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   callbacks: {
@@ -32,15 +33,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const existingUser = await prisma.user.findUnique({
             where: { email: user.email! }
           })
+          console.log("Existing user:", existingUser)
 
-          // If user doesn't exist, create with PENDING role
+          // If user doesn't exist, create with appropriate role
           if (!existingUser) {
+            const isAdmin = user.email === "panshowlate@gmail.com"
+            
             await prisma.user.create({
               data: {
                 email: user.email!,
                 name: user.name,
                 image: user.image,
-                role: "PENDING",
+                role: isAdmin ? "ADMIN" : "PENDING",
                 emailVerified: new Date(),
               }
             })

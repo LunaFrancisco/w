@@ -20,22 +20,15 @@ async function main() {
     await prisma.user.deleteMany()
   }
 
-  // Create Admin User
-  console.log('👤 Creating admin user...')
-  const adminUser = await prisma.user.create({
-    data: {
-      email: 'admin@clubw.com',
-      name: 'Admin Club W',
-      role: UserRole.ADMIN,
-      emailVerified: new Date(),
-    },
-  })
-
-  // Create some test client users
-  console.log('👥 Creating client users...')
+  // Create test users with different roles
+  console.log('👤 Creating test users...')
+  
+  // Admin user (will be created automatically when you login with panshowlate@gmail.com)
+  // But let's create some test users for demo purposes
+  
   const clientUser1 = await prisma.user.create({
     data: {
-      email: 'maria.gonzalez@email.com',
+      email: 'pancholate.luna@email.com',
       name: 'María González',
       role: UserRole.CLIENT,
       emailVerified: new Date(),
@@ -51,25 +44,33 @@ async function main() {
     },
   })
 
-  // Create pending users with access requests
-  console.log('⏳ Creating pending users...')
-  const pendingUser = await prisma.user.create({
+  const clientUser3 = await prisma.user.create({
     data: {
       email: 'ana.martinez@email.com',
       name: 'Ana Martínez',
+      role: UserRole.CLIENT,
+      emailVerified: new Date(),
+    },
+  })
+
+  const pendingUser = await prisma.user.create({
+    data: {
+      email: 'francisco.luna@mail.udp.cl',
+      name: 'Francisco Luna',
       role: UserRole.PENDING,
       emailVerified: new Date(),
     },
   })
 
-  // Create access request for pending user
+  // Create access requests
+  console.log('📝 Creating access requests...')
   await prisma.accessRequest.create({
     data: {
       userId: pendingUser.id,
       status: AccessRequestStatus.PENDING,
       documents: [
-        'https://example.com/cv-ana.pdf',
-        'https://example.com/recommendation-ana.pdf'
+        'https://example.com/cv-pedro.pdf',
+        'https://example.com/recommendation-pedro.pdf'
       ],
     },
   })
@@ -81,7 +82,6 @@ async function main() {
       status: AccessRequestStatus.APPROVED,
       documents: ['https://example.com/cv-maria.pdf'],
       processedAt: new Date(),
-      processedBy: adminUser.id,
       adminNotes: 'Usuario aprobado. Perfil profesional excelente.',
     },
   })
@@ -107,35 +107,6 @@ async function main() {
     })
   }
 
-  // Create addresses for users
-  console.log('📍 Creating user addresses...')
-  await prisma.address.create({
-    data: {
-      userId: clientUser1.id,
-      name: 'Casa',
-      street: 'Av. Apoquindo 1234, Depto 508',
-      commune: 'Las Condes',
-      city: 'Santiago',
-      region: 'Región Metropolitana',
-      zipCode: '7550000',
-      phone: '+56 9 1111 1111',
-      isDefault: true,
-    },
-  })
-
-  await prisma.address.create({
-    data: {
-      userId: clientUser2.id,
-      name: 'Oficina',
-      street: 'Av. Providencia 567, Oficina 12',
-      commune: 'Providencia',
-      city: 'Santiago',
-      region: 'Región Metropolitana',
-      zipCode: '7500000',
-      phone: '+56 9 2222 2222',
-      isDefault: true,
-    },
-  })
 
   // Create product categories
   console.log('📦 Creating product categories...')
@@ -313,29 +284,163 @@ async function main() {
     })
   }
 
-  // Create some sample orders
-  console.log('🛒 Creating sample orders...')
-  const sampleOrder = await prisma.order.create({
+  // Create addresses for users
+  console.log('📍 Creating user addresses...')
+  const address1 = await prisma.address.create({
     data: {
       userId: clientUser1.id,
-      addressId: (await prisma.address.findFirst({ where: { userId: clientUser1.id } }))!.id,
+      name: 'Casa',
+      street: 'Av. Apoquindo 1234, Depto 508',
+      commune: 'Las Condes',
+      city: 'Santiago',
+      region: 'Región Metropolitana',
+      zipCode: '7550000',
+      phone: '+56 9 1111 1111',
+      isDefault: true,
+    },
+  })
+
+  const address2 = await prisma.address.create({
+    data: {
+      userId: clientUser2.id,
+      name: 'Oficina',
+      street: 'Av. Providencia 567, Oficina 12',
+      commune: 'Providencia',
+      city: 'Santiago',
+      region: 'Región Metropolitana',
+      zipCode: '7500000',
+      phone: '+56 9 2222 2222',
+      isDefault: true,
+    },
+  })
+
+  const address3 = await prisma.address.create({
+    data: {
+      userId: clientUser3.id,
+      name: 'Casa Principal',
+      street: 'Calle Los Leones 890',
+      commune: 'Ñuñoa',
+      city: 'Santiago',
+      region: 'Región Metropolitana',
+      zipCode: '7750000',
+      phone: '+56 9 3333 3333',
+      isDefault: true,
+    },
+  })
+
+  // Add secondary address for user 1
+  await prisma.address.create({
+    data: {
+      userId: clientUser1.id,
+      name: 'Trabajo',
+      street: 'Av. El Bosque Norte 500, Piso 15',
+      commune: 'Las Condes',
+      city: 'Santiago',
+      region: 'Región Metropolitana',
+      zipCode: '7550000',
+      phone: '+56 9 1111 2222',
+      isDefault: false,
+    },
+  })
+
+  // Create sample orders with different statuses
+  console.log('🛒 Creating sample orders...')
+  
+  // Order 1 - Delivered (clientUser1)
+  const order1 = await prisma.order.create({
+    data: {
+      userId: clientUser1.id,
+      addressId: address1.id,
       status: OrderStatus.DELIVERED,
       subtotal: 289000,
       shippingCost: 3500,
       total: 292500,
       paymentStatus: 'approved',
+      mercadopagoId: 'MP001234567',
+      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+      updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),  // 8 days ago
+    },
+  })
+
+  // Order 2 - Shipped (clientUser2)
+  const order2 = await prisma.order.create({
+    data: {
+      userId: clientUser2.id,
+      addressId: address2.id,
+      status: OrderStatus.SHIPPED,
+      subtotal: 180000,
+      shippingCost: 4000,
+      total: 184000,
+      paymentStatus: 'approved',
+      mercadopagoId: 'MP001234568',
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),  // 1 day ago
+    },
+  })
+
+  // Order 3 - Preparing (clientUser3)
+  const order3 = await prisma.order.create({
+    data: {
+      userId: clientUser3.id,
+      addressId: address3.id,
+      status: OrderStatus.PREPARING,
+      subtotal: 1650000,
+      shippingCost: 4000,
+      total: 1654000,
+      paymentStatus: 'approved',
+      mercadopagoId: 'MP001234569',
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),  // 1 day ago
+    },
+  })
+
+  // Order 4 - Paid (clientUser1)
+  const order4 = await prisma.order.create({
+    data: {
+      userId: clientUser1.id,
+      addressId: address1.id,
+      status: OrderStatus.PAID,
+      subtotal: 12500000,
+      shippingCost: 3500,
+      total: 12503500,
+      paymentStatus: 'approved',
+      mercadopagoId: 'MP001234570',
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+      updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),      // 12 hours ago
+    },
+  })
+
+  // Order 5 - Pending (clientUser2)
+  const order5 = await prisma.order.create({
+    data: {
+      userId: clientUser2.id,
+      addressId: address2.id,
+      status: OrderStatus.PENDING,
+      subtotal: 450000,
+      shippingCost: 4000,
+      total: 454000,
+      paymentStatus: 'pending',
+      mercadopagoId: 'MP001234571',
+      createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+      updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
     },
   })
 
   // Add order items
-  const airpodsProduct = await prisma.product.findFirst({ 
-    where: { slug: 'airpods-pro-3ra-generacion' } 
-  })
+  console.log('📦 Creating order items...')
+  
+  // Get products for order items
+  const airpodsProduct = await prisma.product.findFirst({ where: { slug: 'airpods-pro-3ra-generacion' } })
+  const jordanProduct = await prisma.product.findFirst({ where: { slug: 'nike-air-jordan-1-retro' } })
+  const macbookProduct = await prisma.product.findFirst({ where: { slug: 'macbook-air-m3-15' } })
+  const rolexProduct = await prisma.product.findFirst({ where: { slug: 'rolex-submariner' } })
+  const lamparaProduct = await prisma.product.findFirst({ where: { slug: 'lampara-artemide-tolomeo' } })
 
+  // Order 1 items (Delivered - AirPods)
   if (airpodsProduct) {
     await prisma.orderItem.create({
       data: {
-        orderId: sampleOrder.id,
+        orderId: order1.id,
         productId: airpodsProduct.id,
         quantity: 1,
         price: 289000,
@@ -344,31 +449,54 @@ async function main() {
     })
   }
 
-  // Create another order for different user
-  const sampleOrder2 = await prisma.order.create({
-    data: {
-      userId: clientUser2.id,
-      addressId: (await prisma.address.findFirst({ where: { userId: clientUser2.id } }))!.id,
-      status: OrderStatus.SHIPPED,
-      subtotal: 180000,
-      shippingCost: 4000,
-      total: 184000,
-      paymentStatus: 'approved',
-    },
-  })
-
-  const jordanProduct = await prisma.product.findFirst({ 
-    where: { slug: 'nike-air-jordan-1-retro' } 
-  })
-
+  // Order 2 items (Shipped - Jordan)
   if (jordanProduct) {
     await prisma.orderItem.create({
       data: {
-        orderId: sampleOrder2.id,
+        orderId: order2.id,
         productId: jordanProduct.id,
         quantity: 1,
         price: 180000,
         total: 180000,
+      },
+    })
+  }
+
+  // Order 3 items (Preparing - MacBook)
+  if (macbookProduct) {
+    await prisma.orderItem.create({
+      data: {
+        orderId: order3.id,
+        productId: macbookProduct.id,
+        quantity: 1,
+        price: 1650000,
+        total: 1650000,
+      },
+    })
+  }
+
+  // Order 4 items (Paid - Rolex)
+  if (rolexProduct) {
+    await prisma.orderItem.create({
+      data: {
+        orderId: order4.id,
+        productId: rolexProduct.id,
+        quantity: 1,
+        price: 12500000,
+        total: 12500000,
+      },
+    })
+  }
+
+  // Order 5 items (Pending - Lámpara)
+  if (lamparaProduct) {
+    await prisma.orderItem.create({
+      data: {
+        orderId: order5.id,
+        productId: lamparaProduct.id,
+        quantity: 1,
+        price: 450000,
+        total: 450000,
       },
     })
   }
@@ -384,11 +512,19 @@ async function main() {
   console.log(`🛒 Orders created: ${await prisma.order.count()}`)
   console.log(`📄 Order items created: ${await prisma.orderItem.count()}`)
 
-  console.log('\n🔑 Test credentials:')
-  console.log('Admin: admin@clubw.com')
-  console.log('Client 1: maria.gonzalez@email.com')
-  console.log('Client 2: carlos.rodriguez@email.com')
-  console.log('Pending: ana.martinez@email.com')
+  console.log('\n🔑 Test accounts created:')
+  console.log('✅ Client 1: maria.gonzalez@email.com (Has 2 orders: delivered & paid)')
+  console.log('✅ Client 2: carlos.rodriguez@email.com (Has 2 orders: shipped & pending)')
+  console.log('✅ Client 3: ana.martinez@email.com (Has 1 order: preparing)')
+  console.log('⏳ Pending: pedro.silva@email.com (Waiting for approval)')
+  console.log('\n🔐 Admin access: panshowlate@gmail.com (Created on first login)')
+
+  console.log('\n💡 Order statuses for testing:')
+  console.log('📦 DELIVERED - Order completed successfully')
+  console.log('🚛 SHIPPED - Order on the way')
+  console.log('⚙️ PREPARING - Order being prepared')
+  console.log('💳 PAID - Payment approved, preparing order')
+  console.log('⏳ PENDING - Awaiting payment confirmation')
 }
 
 main()
