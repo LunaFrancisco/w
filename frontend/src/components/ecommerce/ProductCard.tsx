@@ -12,7 +12,7 @@ interface Product {
   description: string
   price: number
   stock: number
-  images: string[]
+  images: string
   featured: boolean
   category: {
     id: string

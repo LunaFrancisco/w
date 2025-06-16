@@ -2,7 +2,10 @@ import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "./prisma"
+import { UserRole } from "@prisma/client"
 
+// This file is used for server-side authentication handling
+// It should only be imported in server components or API routes
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -13,8 +16,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      // Add user role to session
+    async jwt({ token, user }) {
+      // Add user data to JWT token
+      if (user) {
+        token.id = user.id
+        token.role = user.role || "PENDING"
+      }
+      return token
+    },
+    async session({ session, user, token }) {
+      // For JWT strategy
+      if (token && !user) {
+        if (session.user) {          session.user.id = token.id as string
+          session.user.role = (token.role as UserRole) || "PENDING" as UserRole
+        }
+        return session
+      }
+
+      // For database strategy - add user role to session
       if (session.user && user) {
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
@@ -63,7 +82,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/auth/signin",
     error: "/auth/error",
   },
+  // Enable both strategies for compatibility
   session: {
-    strategy: "database",
+    strategy: "jwt", // Use JWT strategy which is more compatible with Edge
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 })

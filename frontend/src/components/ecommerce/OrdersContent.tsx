@@ -15,7 +15,7 @@ interface OrderItem {
     id: string
     name: string
     slug: string
-    images: string[]
+    images: string
   }
 }
 

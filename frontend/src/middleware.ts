@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { auth } from '@/lib/auth'
+// import type { NextRequest } from 'next/server'
+import { edgeAuth } from '@/lib/auth.edge'
 
-export default auth((req) => {
+export default edgeAuth((req) => {
   const { pathname } = req.nextUrl
   const session = req.auth
 

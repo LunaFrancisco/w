@@ -4,6 +4,7 @@ import "./globals.css";
 import NavigationClient from '@/components/NavigationClient'
 import Footer from '@/components/Footer'
 import { SessionProvider } from '@/components/SessionProvider'
+import { Toaster } from 'sonner'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <Toaster />
         </SessionProvider>
       </body>
     </html>

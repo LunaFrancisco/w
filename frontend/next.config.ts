@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
   // Basic configuration
   trailingSlash: true,
   staticPageGenerationTimeout: 60,
+  // Configure Prisma compatibility
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client", "bcrypt"],
+  },
 };
 
 export default nextConfig;
