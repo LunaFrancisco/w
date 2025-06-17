@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      cost: shippingZone.cost,
+      cost: Number(shippingZone.cost),
       deliveryDays: shippingZone.deliveryDays,
       commune: shippingZone.commune
     })

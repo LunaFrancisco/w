@@ -77,6 +77,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Test database connection first
+    try {
+      await prisma.$queryRaw`SELECT 1`
+    } catch (dbError) {
+      console.error('Database connection failed:', dbError)
+      return NextResponse.json(
+        { error: 'Error de conexión a la base de datos. Intenta nuevamente en unos momentos.' },
+        { status: 503 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const page = parseInt(searchParams.get('page') || '1')
@@ -85,19 +96,36 @@ export async function GET(request: NextRequest) {
 
     const where = status ? { status } : {}
 
-    const [accessRequests, total] = await Promise.all([
-      prisma.accessRequest.findMany({
-        where,
-        include: {
-          user: { select: { id: true, name: true, email: true, image: true } },
-          processedBy: { select: { name: true } }
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit
-      }),
-      prisma.accessRequest.count({ where })
-    ])
+    // Execute with retry logic and timeout
+    const executeWithRetry = async (query: () => Promise<any>, maxRetries = 2) => {
+      for (let i = 0; i <= maxRetries; i++) {
+        try {
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Query timeout')), 10000)
+          )
+          return await Promise.race([query(), timeoutPromise])
+        } catch (error) {
+          if (i === maxRetries) throw error
+          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)))
+        }
+      }
+    }
+
+    // Execute queries sequentially to avoid connection limits
+    console.log('Fetching access requests...')
+    const accessRequests = await executeWithRetry(() => prisma.accessRequest.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true, image: true } },
+        processor: { select: { name: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit
+    }))
+    
+    console.log('Counting access requests...')
+    const total = await executeWithRetry(() => prisma.accessRequest.count({ where }))
 
     return NextResponse.json({
       requests: accessRequests,
@@ -111,9 +139,18 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching access requests:', error)
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    )
+    
+    // Return fallback data if database is not available
+    return NextResponse.json({
+      requests: [],
+      pagination: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        pages: 0
+      },
+      error: 'Los datos no están disponibles temporalmente. Intenta actualizar en unos momentos.',
+      fallback: true
+    })
   }
 }

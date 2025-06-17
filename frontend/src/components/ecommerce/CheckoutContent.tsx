@@ -72,7 +72,7 @@ export function CheckoutContent({ userId }: CheckoutContentProps) {
       if (!response.ok) throw new Error('Error al calcular envío')
       
       const data = await response.json()
-      setShippingCost(data.cost)
+      setShippingCost(Number(data.cost))
     } catch (error) {
       console.error('Error calculating shipping:', error)
       setShippingCost(5000) // Default shipping cost
@@ -154,7 +154,7 @@ export function CheckoutContent({ userId }: CheckoutContentProps) {
     )
   }
 
-  const subtotal = getTotalPrice()
+  const subtotal = Number(getTotalPrice())
   const total = subtotal + shippingCost
 
   return (
