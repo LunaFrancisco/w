@@ -10,10 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
-cms/node_modules/
-cms/node_modules/
-frontend/node_modules/
-frontend/node_modules/*
+cms/node_modules
+/cms/node_modules
+/frontend/node_modules
 
 # testing
 /coverage
