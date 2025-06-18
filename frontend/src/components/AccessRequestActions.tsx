@@ -8,9 +8,10 @@ import { toast } from 'sonner'
 
 interface AccessRequestActionsProps {
   requestId: string
+  onUpdate?: () => void
 }
 
-export default function AccessRequestActions({ requestId }: AccessRequestActionsProps) {
+export default function AccessRequestActions({ requestId, onUpdate }: AccessRequestActionsProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [notes, setNotes] = useState('')
   const [showNotes, setShowNotes] = useState(false)
@@ -37,7 +38,13 @@ export default function AccessRequestActions({ requestId }: AccessRequestActions
       }
 
       toast.success(`Solicitud ${action === 'APPROVED' ? 'aprobada' : 'rechazada'} correctamente`)
-      router.refresh()
+      
+      // Call onUpdate if provided, otherwise fallback to router.refresh()
+      if (onUpdate) {
+        onUpdate()
+      } else {
+        router.refresh()
+      }
     } catch (error) {
       toast.error('Error al procesar la solicitud')
       console.error('Error:', error)

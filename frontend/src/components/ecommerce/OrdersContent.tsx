@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Package, MapPin, Calendar, CreditCard, ShoppingBag, Eye } from 'lucide-react'
+import { Package, MapPin, Calendar, CreditCard, ShoppingBag, Eye, Settings } from 'lucide-react'
+import { OrderStatusSelect } from '@/components/orders/OrderStatusSelect'
+import { useSession } from 'next-auth/react'
 
 interface OrderItem {
   id: string
@@ -39,14 +41,12 @@ interface Order {
   items: OrderItem[]
 }
 
-interface OrdersContentProps {
-  userId: string
-}
 
-export function OrdersContent({ userId }: OrdersContentProps) {
+export function OrdersContent() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { data: session } = useSession()
 
   useEffect(() => {
     fetchOrders()
@@ -285,18 +285,29 @@ export function OrdersContent({ userId }: OrdersContentProps) {
                 Última actualización: {formatDate(order.updatedAt)}
               </div>
               
-              <div className="mt-2 sm:mt-0 space-x-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/pedidos/${order.id}`}>
-                    <Eye className="w-4 h-4 mr-1" />
-                    Ver detalles
-                  </Link>
-                </Button>
-                
-                {order.status === 'DELIVERED' && (
-                  <Button variant="outline" size="sm">
-                    Volver a comprar
+              <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row gap-2">
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/pedidos/${order.id}`}>
+                      <Eye className="w-4 h-4 mr-1" />
+                      Ver detalles
+                    </Link>
                   </Button>
+                  
+                  {order.status === 'DELIVERED' && (
+                    <Button variant="outline" size="sm">
+                      Volver a comprar
+                    </Button>
+                  )}
+                </div>
+                
+                {session?.user?.role === 'ADMIN' && (
+                  <div className="mt-2 sm:mt-0">
+                    <OrderStatusSelect 
+                      orderId={order.id}
+                      currentStatus={order.status}
+                    />
+                  </div>
                 )}
               </div>
             </div>

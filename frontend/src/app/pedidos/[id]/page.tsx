@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { OrderStepper } from '@/components/ui/stepper'
+import { OrderStatusSelect } from '@/components/orders/OrderStatusSelect'
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>
@@ -22,7 +24,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   if (session.user.role !== 'CLIENT' && session.user.role !== 'ADMIN') {
     redirect('/auth/unauthorized')
   }
-
+  console.log('Fetching order details for ID:', id)
   const order = await prisma.order.findFirst({
     where: {
       id: id,
@@ -108,10 +110,22 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
         </div>
       </div>
 
-      {/* Status Description */}
+      {session.user.role === 'ADMIN' && (
+        <div className="mt-6 flex justify-center">
+          <OrderStatusSelect 
+            orderId={order.id}
+            currentStatus={order.status}
+          />
+        </div>
+      )}
+      {/* Order Status Stepper */}
       <Card>
-        <CardContent className="pt-6">
-          <p className="text-gray-700">
+        <CardHeader>
+          <CardTitle>Estado del Pedido</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OrderStepper currentStatus={order.status} className="mb-6" />
+          <p className="text-gray-700 text-center">
             {getStatusDescription(order.status)}
           </p>
         </CardContent>
