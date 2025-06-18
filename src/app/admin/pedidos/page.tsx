@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Search, Filter, TrendingUp, Clock, CheckCircle, Truck, Package, XCircle, Eye, BarChart3, RefreshCw } from 'lucide-react'
+import { Search, TrendingUp, Clock, CheckCircle, Truck, Package, XCircle, Eye, BarChart3, RefreshCw } from 'lucide-react'
 
 interface Order {
   id: string
@@ -348,6 +349,12 @@ function StatCard({ title, value, color, icon }: {
 }
 
 function OrderCard({ order }: { order: Order }) {
+  const router = useRouter()
+
+  const handleViewDetails = () => {
+    router.push(`/pedidos/${order.id}`)
+  }
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       PENDING: { label: 'Pendiente', className: 'bg-orange-100 text-orange-800 border-orange-200' },
@@ -373,12 +380,17 @@ function OrderCard({ order }: { order: Order }) {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center space-x-3 mb-2">
-            <h3 className="font-semibold text-gray-900 text-lg">
+            <Button
+              variant="link"
+              className="font-semibold text-gray-900 text-lg p-0 h-auto hover:underline"
+              onClick={handleViewDetails}
+            >
               Pedido #{order.id.slice(-8)}
-            </h3>
+            </Button>
             {getStatusBadge(order.status)}
-            <Button variant="ghost" size="sm" className="ml-auto hover:bg-gray-100">
-              <Eye className="h-4 w-4" />
+            <Button variant="ghost" size="sm" className="ml-auto hover:bg-gray-100" onClick={handleViewDetails}>
+              <Eye className="h-4 w-4 mr-2" />
+              Ver Detalle
             </Button>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -469,7 +481,16 @@ function OrderCard({ order }: { order: Order }) {
         </div>
       )}
 
-      <div className="pt-2 border-t">
+      <div className="pt-2 border-t flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-2"
+          onClick={handleViewDetails}
+        >
+          <Eye className="h-4 w-4" />
+          Ver Detalle Completo
+        </Button>
         {/* OrderStatusActions component would go here */}
       </div>
     </div>

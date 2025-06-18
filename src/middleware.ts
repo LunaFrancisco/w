@@ -44,7 +44,6 @@ export default edgeAuth((req) => {
   }
 
   const userRole = session.user?.role
-
   // Handle role-based access control
   if (pathname.startsWith('/(portal)') || pathname.startsWith('/dashboard') || pathname.startsWith('/productos') || pathname.startsWith('/carrito') || pathname.startsWith('/pedidos') || pathname.startsWith('/perfil') || pathname.startsWith('/checkout')) {
     // Portal routes require CLIENT or ADMIN role
@@ -59,7 +58,10 @@ export default edgeAuth((req) => {
   if (pathname.startsWith('/admin')) {
     // Admin routes require ADMIN role
     if (userRole !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/auth/unauthorized', req.url))
+      const unauthorizedUrl = new URL('/auth/unauthorized', req.url)
+      // Let them know they tried to access admin area
+      unauthorizedUrl.searchParams.set('reason', 'admin')
+      return NextResponse.redirect(unauthorizedUrl)
     }
   }
 

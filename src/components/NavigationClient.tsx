@@ -6,12 +6,15 @@ import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Menu, X, ShoppingBag, Users, ShoppingCart, User, LogOut, Settings } from 'lucide-react'
-import { CartCounter } from './CartCounter'
+import { CartCounter } from '@/components/ecommerce/CartCounter'
+import { CartDrawer } from '@/components/ecommerce/CartDrawer'
+import { useCart } from '@/hooks/useCart'
 
 export default function NavigationClient() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { isDrawerOpen, openDrawer, closeDrawer } = useCart()
 
   // Navigation items for public pages
   const publicNavItems = [
@@ -24,7 +27,6 @@ export default function NavigationClient() {
   const authNavItems = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/productos', label: 'Productos' },
-    { href: '/carrito', label: 'Carrito' },
     { href: '/pedidos', label: 'Mis Pedidos' },
   ]
 
@@ -65,7 +67,6 @@ export default function NavigationClient() {
                 }`}
               >
                 {item.label}
-                {item.href === '/carrito' && <CartCounter />}
               </Link>
             ))}
             
@@ -89,12 +90,15 @@ export default function NavigationClient() {
               {session ? (
                 <div className="flex items-center space-x-3">
                   {/* Cart button for authenticated users */}
-                  <Link href="/carrito" className="relative">
-                    <Button variant="outline" size="sm">
-                      <ShoppingCart className="w-4 h-4" />
-                      <CartCounter />
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={openDrawer}
+                    className="relative"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <CartCounter />
+                  </Button>
                   
                   {/* User menu */}
                   <div className="relative group">
@@ -173,7 +177,6 @@ export default function NavigationClient() {
                 }`}
               >
                 {item.label}
-                {item.href === '/carrito' && <CartCounter />}
               </Link>
             ))}
             
@@ -196,6 +199,18 @@ export default function NavigationClient() {
             <div className="pt-4 space-y-3 border-t border-border">
               {session ? (
                 <>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start" 
+                    onClick={() => {
+                      setIsMobileMenuOpen(false)
+                      openDrawer()
+                    }}
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Carrito
+                    <CartCounter />
+                  </Button>
                   <Button variant="outline" className="w-full justify-start" asChild>
                     <Link href="/perfil" onClick={() => setIsMobileMenuOpen(false)}>
                       <Settings className="w-4 h-4 mr-2" />
@@ -233,6 +248,9 @@ export default function NavigationClient() {
           </div>
         )}
       </div>
+      
+      {/* Cart Drawer */}
+      <CartDrawer open={isDrawerOpen} onOpenChange={closeDrawer} />
     </nav>
   )
 }
