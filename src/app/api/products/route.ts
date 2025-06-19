@@ -102,7 +102,13 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(totalCount / limit)
 
     return NextResponse.json({
-      products,
+      products: products.map(product => ({
+        ...product,
+        price: Number(product.price),
+        images: Array.isArray(product.images) 
+          ? product.images.filter((img): img is string => typeof img === 'string')
+          : [],
+      })),
       totalPages,
       currentPage: page,
       totalCount,

@@ -1,15 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const session = await auth()
+
+    if (!session || session.user.role === 'PENDING') {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      )
+    }
+
+    const { slug } = await params
     const product = await prisma.product.findUnique({
-      where: { 
-        id: params.id,
-        active: true 
+      where: {
+        slug,
+        active: true,
       },
       include: {
         category: {
@@ -17,9 +28,9 @@ export async function GET(
             id: true,
             name: true,
             slug: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     if (!product) {
@@ -29,8 +40,13 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(product)
-
+    return NextResponse.json({
+      ...product,
+      price: Number(product.price),
+      images: Array.isArray(product.images) 
+        ? product.images.filter((img): img is string => typeof img === 'string')
+        : [],
+    })
   } catch (error) {
     console.error('Error fetching product:', error)
     return NextResponse.json(
