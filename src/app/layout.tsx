@@ -7,6 +7,7 @@ import { SessionProvider } from '@/components/SessionProvider'
 import { Toaster } from 'sonner'
 import ClarityAnalytic from '@/components/ClarityAnalytic'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import Head from "next/head";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,9 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
+      <Head>
         <ClarityAnalytic />
         <GoogleAnalytics />
+      </Head>
+      <body className={`${inter.className} min-h-screen flex flex-col`}>
         <SessionProvider>
           {/* Skip link for accessibility */}
           <a href="#main-content" className="skip-link">
