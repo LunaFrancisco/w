@@ -15,6 +15,7 @@ import {
   Lock,
   Globe
 } from 'lucide-react'
+import { GtmEvent } from '@next/third-parties/google'
 
 export default function HomePage() {
   return (
@@ -77,7 +78,7 @@ export default function HomePage() {
                 className="group relative px-8 py-6 text-lg font-semibold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white border-0 rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/25"
                 asChild
               >
-                <Link href="/solicitud-acceso">
+                <Link href="/solicitud-acceso" onClick={() => {GtmEvent({ event: 'join_club', label: 'Únete Ahora Button Clicked' })}}>
                   <span className="relative z-10 flex items-center">
                     <Zap className="w-5 h-5 mr-2 animate-pulse" />
                     Únete Ahora
