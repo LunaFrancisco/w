@@ -2,6 +2,7 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { sendGTMEvent } from '@next/third-parties/google'
 
 export interface CartItem {
   id: string
@@ -68,6 +69,7 @@ export const useCart = create<CartStore>()(
                   : item
               )
             })
+            sendGTMEvent({ event: 'add_to_cart', item_name: existingItem.name });
           } else {
             // Fetch product details
             const response = await fetch(`/api/products/${productId}`)
@@ -94,6 +96,7 @@ export const useCart = create<CartStore>()(
             set({
               items: [...get().items, newItem]
             })
+            sendGTMEvent({ event: 'add_to_cart', item_name: product.name });
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Error al agregar al carrito'
