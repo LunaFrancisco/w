@@ -7,6 +7,7 @@ import { SessionProvider } from '@/components/SessionProvider'
 import { Toaster } from 'sonner'
 import ClarityAnalytic from '@/components/ClarityAnalytic'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import Head from "next/head";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,6 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <Head>
+        <ClarityAnalytic />
+        <GoogleAnalytics />
+      </Head>
       <body className={`${inter.className} min-h-screen flex flex-col`}>
         <ClarityAnalytic />
         <GoogleAnalytics />

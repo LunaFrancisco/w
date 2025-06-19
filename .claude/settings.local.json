@@ -2,9 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(npm run build:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
       "Bash(rm:*)",
       "Bash(ping:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm install)",
+      "Bash(find:*)",
+      "Bash(rg:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
