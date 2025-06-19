@@ -18,12 +18,18 @@ interface CartStore {
   items: CartItem[]
   isLoading: boolean
   error: string | null
+  isDrawerOpen: boolean
   
   // Actions
   addToCart: (productId: string, quantity?: number) => Promise<void>
   updateQuantity: (productId: string, quantity: number) => void
   removeFromCart: (productId: string) => void
   clearCart: () => void
+  
+  // Drawer actions
+  openDrawer: () => void
+  closeDrawer: () => void
+  toggleDrawer: () => void
   
   // Computed values
   getTotalItems: () => number
@@ -37,6 +43,7 @@ export const useCart = create<CartStore>()(
       items: [],
       isLoading: false,
       error: null,
+      isDrawerOpen: false,
 
       addToCart: async (productId: string, quantity = 1) => {
         set({ isLoading: true, error: null })
@@ -131,6 +138,19 @@ export const useCart = create<CartStore>()(
 
       clearCart: () => {
         set({ items: [], error: null })
+      },
+
+      // Drawer actions
+      openDrawer: () => {
+        set({ isDrawerOpen: true })
+      },
+
+      closeDrawer: () => {
+        set({ isDrawerOpen: false })
+      },
+
+      toggleDrawer: () => {
+        set({ isDrawerOpen: !get().isDrawerOpen })
       },
 
       getTotalItems: () => {
