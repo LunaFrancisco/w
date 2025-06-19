@@ -66,6 +66,7 @@ export default function SignInForm() {
 
         {/* Google Sign In Button */}
         <Button
+          id='google-signin-button'
           onClick={handleGoogleSignIn}
           disabled={isLoading}
           className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 py-6 text-lg font-medium"
