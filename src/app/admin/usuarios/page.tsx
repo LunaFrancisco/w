@@ -1,55 +1,95 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import UserRoleActions from '@/components/UserRoleActions'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
+import { AlertCircle } from 'lucide-react'
 
-export default async function UsersManagementPage() {
-  const session = await auth()
+// Components
+import UserViewToggle, { ViewType } from './components/UserViewToggle'
+import UserTable from './components/UserTable'
+import UserGrid from './components/UserGrid'
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/auth/unauthorized')
+// Hooks
+import { useUsers } from '@/hooks/useUsers'
+import { useSession } from 'next-auth/react'
+
+export default function UsersManagementPage() {
+  const { data: session, status } = useSession()
+  const [currentView, setCurrentView] = useState<ViewType>('grid')
+  
+  const {
+    users,
+    stats,
+    loading,
+    error,
+    refetch,
+    updateUserRole,
+    deleteUser
+  } = useUsers()
+
+  // Load saved view preference
+  useEffect(() => {
+    const savedView = localStorage.getItem('userViewPreference') as ViewType
+    if (savedView && ['grid', 'table'].includes(savedView)) {
+      setCurrentView(savedView)
+    }
+  }, [])
+
+  const handleViewChange = (view: ViewType) => {
+    setCurrentView(view)
   }
 
-  const users = await prisma.user.findMany({
-    include: {
-      _count: {
-        select: {
-          orders: true,
-          addresses: true,
-          processedRequests: true
-        }
-      },
-      accessRequest: {
-        select: {
-          id: true,
-          status: true
-        }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      await updateUserRole(userId, newRole)
+    } catch (error) {
+      // Error is already handled in the hook with toast
+    }
+  }
 
-  const userStats = {
-    total: users.length,
-    admins: users.filter(u => u.role === 'ADMIN').length,
-    clients: users.filter(u => u.role === 'CLIENT').length,
-    pending: users.filter(u => u.role === 'PENDING').length,
+  const handleDeleteUser = async (userId: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) {
+      try {
+        await deleteUser(userId)
+      } catch (error) {
+        // Error is already handled in the hook with toast
+      }
+    }
+  }
+
+  // Show loading state while session is loading
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600"></div>
+      </div>
+    )
+  }
+
+  // The middleware should handle auth, but double-check here
+  if (status === 'unauthenticated' || !session?.user || session.user.role !== 'ADMIN') {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Acceso no autorizado</h3>
+        <p className="text-gray-500">No tienes permisos para acceder a esta página.</p>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
         <p className="text-gray-600 mt-2">
-          Administra todos los usuarios del sistema
+          Administra todos los usuarios del sistema de manera avanzada
         </p>
       </div>
 
       {/* User Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
@@ -58,7 +98,7 @@ export default async function UsersManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {userStats.total}
+              {stats.total.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -71,7 +111,7 @@ export default async function UsersManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {userStats.admins}
+              {stats.admins.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -84,7 +124,7 @@ export default async function UsersManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {userStats.clients}
+              {stats.clients.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -97,121 +137,75 @@ export default async function UsersManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {userStats.pending}
+              {stats.pending.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Verificados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.verified.toLocaleString()}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Users List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Todos los Usuarios</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {users.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              No hay usuarios en el sistema
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {users.map((user) => (
-                <UserCard key={user.id} user={user} currentUserId={session.user.id} />
-              ))}
+      <Separator />
+
+      {/* View Toggle and Controls */}
+      <UserViewToggle
+        currentView={currentView}
+        onViewChange={handleViewChange}
+        totalUsers={stats.total}
+        filteredUsers={stats.total}
+      />
+
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertCircle className="w-5 h-5" />
+              <p className="font-medium">Error al cargar usuarios</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-function UserCard({ user, currentUserId }: { user: any; currentUserId: string }) {
-  const getRoleBadge = (role: string) => {
-    const roleConfig = {
-      ADMIN: { label: 'Administrador', className: 'bg-purple-100 text-purple-800' },
-      CLIENT: { label: 'Cliente', className: 'bg-green-100 text-green-800' },
-      PENDING: { label: 'Pendiente', className: 'bg-orange-100 text-orange-800' },
-    }
-
-    const config = roleConfig[role as keyof typeof roleConfig] || 
-                   { label: role, className: 'bg-gray-100 text-gray-800' }
-
-    return (
-      <Badge variant="secondary" className={config.className}>
-        {config.label}
-      </Badge>
-    )
-  }
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
-
-  return (
-    <div className="border rounded-lg p-6 space-y-4">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-4">
-          <Avatar className="w-12 h-12">
-            <AvatarImage src={user.image || ''} alt={user.name} />
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="flex items-center space-x-3">
-              <h3 className="font-medium text-gray-900">{user.name}</h3>
-              {getRoleBadge(user.role)}
-            </div>
-            <p className="text-sm text-gray-600">{user.email}</p>
-            <p className="text-xs text-gray-500">
-              ID: {user.id.slice(-8)}
-            </p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-500">
-            Registro: {new Date(user.createdAt).toLocaleDateString('es-ES')}
-          </p>
-          {user.googleId && (
-            <p className="text-xs text-gray-500">
-              Google SSO
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-        <div>
-          <span className="text-gray-500">Pedidos realizados:</span>
-          <p className="font-medium">{user._count.orders}</p>
-        </div>
-        
-        <div>
-          <span className="text-gray-500">Direcciones:</span>
-          <p className="font-medium">{user._count.addresses}</p>
-        </div>
-        
-        <div>
-          <span className="text-gray-500">Solicitudes:</span>
-          <p className="font-medium">{user.accessRequest ? '1' : '0'}</p>
-        </div>
-      </div>
-
-      {/* Don't allow changing role of current user */}
-      {user.id !== currentUserId && (
-        <UserRoleActions userId={user.id} currentRole={user.role} />
+            <p className="text-red-600 mt-1">{error}</p>
+            <button
+              onClick={refetch}
+              className="mt-3 text-sm text-red-800 underline hover:no-underline"
+            >
+              Intentar de nuevo
+            </button>
+          </CardContent>
+        </Card>
       )}
-      
-      {user.id === currentUserId && (
-        <div className="pt-4 border-t">
-          <p className="text-sm text-gray-500">
-            Este es tu usuario. No puedes cambiar tu propio rol.
-          </p>
-        </div>
+
+      {/* Users Content */}
+      {!error && (
+        <>
+          {currentView === 'table' ? (
+            <UserTable
+              users={users}
+              loading={loading}
+              currentUserId={session.user.id}
+              onRoleChange={handleRoleChange}
+              onDeleteUser={handleDeleteUser}
+            />
+          ) : (
+            <UserGrid
+              users={users}
+              loading={loading}
+              currentUserId={session.user.id}
+              onRoleChange={handleRoleChange}
+              onDeleteUser={handleDeleteUser}
+            />
+          )}
+        </>
       )}
     </div>
   )
