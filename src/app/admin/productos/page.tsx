@@ -201,7 +201,7 @@ function ProductCard({ product }: { product: any }) {
         </div>
         <div className="flex space-x-2">
           <Button asChild variant="outline" size="sm">
-            <Link href={`/admin/productos/${product.id}`}>
+            <Link href={`/admin/productos/${product.slug}`}>
               Editar
             </Link>
           </Button>
