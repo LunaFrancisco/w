@@ -7,6 +7,7 @@ import { SessionProvider } from '@/components/SessionProvider'
 import { Toaster } from 'sonner'
 import { GoogleTagManager } from '@next/third-parties/google'
 import Clarity from '@microsoft/clarity';
+import ClarityAnalytics from "@/components/ClarityAnalytics";
 
 
 const inter = Inter({
@@ -26,6 +27,7 @@ export default function RootLayout({
   Clarity.init("s1nwh9nqgu");
   return (
     <html lang="es">
+      <ClarityAnalytics clarityId="s1nwh9nqgu" />
       <GoogleTagManager gtmId="GTM-PT38FR9F" />
       <body className={`${inter.className} min-h-screen flex flex-col`}>
         <SessionProvider>
