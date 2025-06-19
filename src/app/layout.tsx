@@ -9,7 +9,9 @@ import ClarityAnalytic from '@/components/ClarityAnalytic'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import Head from "next/head";
 import { GoogleTagManager } from '@next/third-parties/google'
- 
+import Clarity from '@microsoft/clarity';
+
+
 const inter = Inter({
   subsets: ["latin"],
 });
@@ -24,11 +26,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  Clarity.init("s1nwh9nqgu");
   return (
     <html lang="es">
       <Head>
         <GoogleTagManager gtmId="GTM-PT38FR9F" />
-        <ClarityAnalytic />
         <GoogleAnalytics />
       </Head>
       <body className={`${inter.className} min-h-screen flex flex-col`}>
