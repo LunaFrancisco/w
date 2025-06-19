@@ -5,6 +5,8 @@ import NavigationClient from '@/components/NavigationClient'
 import Footer from '@/components/Footer'
 import { SessionProvider } from '@/components/SessionProvider'
 import { Toaster } from 'sonner'
+import ClarityAnalytic from '@/components/ClarityAnalytic'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,6 +25,8 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${inter.className} min-h-screen flex flex-col`}>
+        <ClarityAnalytic />
+        <GoogleAnalytics />
         <SessionProvider>
           {/* Skip link for accessibility */}
           <a href="#main-content" className="skip-link">
