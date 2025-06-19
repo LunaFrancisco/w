@@ -5,8 +5,6 @@ import NavigationClient from '@/components/NavigationClient'
 import Footer from '@/components/Footer'
 import { SessionProvider } from '@/components/SessionProvider'
 import { Toaster } from 'sonner'
-import GoogleAnalytics from '@/components/GoogleAnalytics'
-import Head from "next/head";
 import { GoogleTagManager } from '@next/third-parties/google'
 import Clarity from '@microsoft/clarity';
 
@@ -28,12 +26,8 @@ export default function RootLayout({
   Clarity.init("s1nwh9nqgu");
   return (
     <html lang="es">
-      <Head>
-        <GoogleTagManager gtmId="GTM-PT38FR9F" />
-        <GoogleAnalytics />
-      </Head>
+      <GoogleTagManager gtmId="GTM-PT38FR9F" />
       <body className={`${inter.className} min-h-screen flex flex-col`}>
-        <GoogleAnalytics />
         <SessionProvider>
           {/* Skip link for accessibility */}
           <a href="#main-content" className="skip-link">
