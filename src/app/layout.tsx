@@ -8,7 +8,8 @@ import { Toaster } from 'sonner'
 import ClarityAnalytic from '@/components/ClarityAnalytic'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import Head from "next/head";
-
+import { GoogleTagManager } from '@next/third-parties/google'
+ 
 const inter = Inter({
   subsets: ["latin"],
 });
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <Head>
+        <GoogleTagManager gtmId="GTM-PT38FR9F" />
         <ClarityAnalytic />
         <GoogleAnalytics />
       </Head>
