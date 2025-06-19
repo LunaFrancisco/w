@@ -5,7 +5,6 @@ import NavigationClient from '@/components/NavigationClient'
 import Footer from '@/components/Footer'
 import { SessionProvider } from '@/components/SessionProvider'
 import { Toaster } from 'sonner'
-import ClarityAnalytic from '@/components/ClarityAnalytic'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import Head from "next/head";
 import { GoogleTagManager } from '@next/third-parties/google'
