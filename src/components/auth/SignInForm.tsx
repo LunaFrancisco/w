@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShoppingBag, AlertCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { sendGTMEvent } from '@next/third-parties/google'
 
 export default function SignInForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -18,6 +19,7 @@ export default function SignInForm() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     setError(null)
+    sendGTMEvent({ event: 'click_google_login', label: 'Clic en Iniciar Sesión con Google' })
 
     try {
       const result = await signIn('google', {
