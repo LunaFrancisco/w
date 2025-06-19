@@ -33,7 +33,6 @@ export default function RootLayout({
         <GoogleAnalytics />
       </Head>
       <body className={`${inter.className} min-h-screen flex flex-col`}>
-        <ClarityAnalytic />
         <GoogleAnalytics />
         <SessionProvider>
           {/* Skip link for accessibility */}
