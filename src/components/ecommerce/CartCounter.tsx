@@ -22,7 +22,7 @@ export function CartCounter() {
   }
 
   return (
-    <span className="absolute -top-2 -right-2 md:top-5 md:right-5 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+    <span className="absolute -top-2 -right-2 md:top-0 md:right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
       {cartItemsCount > 99 ? '99+' : cartItemsCount}
     </span>
   )
