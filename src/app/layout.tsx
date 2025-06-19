@@ -6,7 +6,6 @@ import Footer from '@/components/Footer'
 import { SessionProvider } from '@/components/SessionProvider'
 import { Toaster } from 'sonner'
 import { GoogleTagManager } from '@next/third-parties/google'
-import Clarity from '@microsoft/clarity';
 import ClarityAnalytics from "@/components/ClarityAnalytics";
 
 
@@ -24,7 +23,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  Clarity.init("s1nwh9nqgu");
   return (
     <html lang="es">
       <ClarityAnalytics clarityId="s1nwh9nqgu" />
