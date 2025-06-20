@@ -8,7 +8,6 @@ export default edgeAuth((req) => {
 
   // Public routes that don't require authentication
   const publicRoutes = [
-    '/',
     '/contacto',
     '/solicitud-acceso',
     '/auth/signin',
