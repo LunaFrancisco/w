@@ -11,7 +11,7 @@ export default async function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Mis Pedidos</h1>
@@ -23,7 +23,7 @@ export default async function OrdersPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         }>
-          <OrdersContent userId={session.user.id} />
+          <OrdersContent />
         </Suspense>
       </div>
     </div>
