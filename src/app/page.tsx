@@ -3,9 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { 
   Users, 
-  Shield, 
   Star, 
-  ArrowRight,
   Heart,
   Award,
   Sparkles,
@@ -15,120 +13,13 @@ import {
   Lock,
   Globe
 } from 'lucide-react'
+import HeroSection from '@/components/HeroSection'
 
 export default function HomePage() {
   return (
     <>
       {/* Hero Section with Animated Background */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-900">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-          {/* Animated gradient orbs */}
-          <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-cyan-500/30 rounded-full blur-3xl animate-pulse animation-delay-2000" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/20 rounded-full blur-3xl animate-pulse animation-delay-4000" />
-        </div>
-
-        {/* Floating particles effect */}
-        <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 10}s`,
-                animationDuration: `${10 + Math.random() * 20}s`
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center space-y-8">
-            {/* Premium badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 animate-fade-in-down">
-              <Crown className="w-4 h-4 text-yellow-400" />
-              <span className="text-sm font-medium text-white/90">Club de Membresía Premium</span>
-              <Sparkles className="w-4 h-4 text-yellow-400" />
-            </div>
-
-            <div className="space-y-6 animate-fade-in-up">
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white">
-                Bienvenido a{' '}
-                <span className="relative">
-                  <span className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                    Club W
-                  </span>
-                  <span className="absolute -inset-1 bg-gradient-to-r from-emerald-400/20 via-cyan-400/20 to-teal-400/20 blur-xl" />
-                </span>
-              </h1>
-              <p className="text-xl sm:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed">
-                El club más exclusivo de Santiago. Accede a productos premium, 
-                ofertas únicas y una experiencia de compra sin igual.
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 animate-fade-in-up animation-delay-200">
-              <Button 
-                size="lg" 
-                className="group relative px-8 py-6 text-lg font-semibold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white border-0 rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/25"
-                asChild
-              >
-                <Link href="/solicitud-acceso">
-                  <span className="relative z-10 flex items-center">
-                    <Zap className="w-5 h-5 mr-2 animate-pulse" />
-                    Únete Ahora
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </Link>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="px-8 py-6 text-lg font-semibold border-2 border-white/20 bg-white/5 backdrop-blur-sm text-white hover:bg-white/10 hover:border-white/40 rounded-xl transition-all duration-300 hover:scale-105"
-                asChild
-              >
-                <Link href="/contacto">
-                  Descubre Más
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-            </div>
-
-            {/* Trust indicators */}
-            <div className="pt-12 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto animate-fade-in-up animation-delay-400">
-              <div className="flex flex-col items-center gap-2 text-white/80">
-                <div className="flex items-center gap-1">
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                </div>
-                <span className="text-sm font-medium">5.0 de calificación</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-white/80">
-                <Users className="w-6 h-6" />
-                <span className="text-sm font-medium">+1,000 miembros activos</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-white/80">
-                <Shield className="w-6 h-6" />
-                <span className="text-sm font-medium">100% Seguro</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-scroll" />
-          </div>
-        </div>
-      </section>
+      <HeroSection/>
 
       {/* Features Section with 3D Cards */}
       <section className="py-24 lg:py-32 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">

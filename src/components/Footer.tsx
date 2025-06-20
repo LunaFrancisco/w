@@ -1,12 +1,22 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { ShoppingBag, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react'
 
 export default function Footer() {
+  const pathname = usePathname()
+  
+  // No renderizar el pie de página en las rutas de administrador
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/auth')) {
+    return null
+  }
+  
   return (
     <footer className="bg-muted/30 border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Company Info */}
+          {/* Información de la empresa */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 gradient-green rounded-lg flex items-center justify-center">
@@ -34,7 +44,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Enlaces Rápidos */}
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Enlaces Rápidos</h3>
             <ul className="space-y-2">
@@ -78,7 +88,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Información de Contacto */}
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Contacto</h3>
             <div className="space-y-3">
