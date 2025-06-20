@@ -35,7 +35,7 @@ export default function RootLayout({
           <ConditionalFloatingButtons />
           
           <ConditionalNavigation />
-          <main id="main-content" className="flex-1">
+          <main id="main-content" className="flex-1 bg-gray-50 pt-16">
             {children}
           </main>
           <Footer />
