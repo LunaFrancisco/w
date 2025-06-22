@@ -77,6 +77,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return true
     },
+    async redirect({ url, baseUrl }) {
+      // Handle role-based redirects after sign in
+      if (url.startsWith("/") || url.startsWith(baseUrl)) {
+        // Default redirect for now - we'll handle role-based redirects client-side
+        return url.startsWith(baseUrl) ? url : baseUrl
+      }
+      return url
+    },
   },
   pages: {
     signIn: "/auth/signin",
