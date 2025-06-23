@@ -55,12 +55,23 @@ export default function SignInForm() {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* Display error messages */}
+      <CardContent className="space-y-6">        {/* Display error messages */}
         {(error || errorParam) && (
-          <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md flex items-start space-x-2">
-            <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-destructive">
+          <div className={`p-4 border rounded-md flex items-end space-x-2 ${
+            errorParam === 'AccessDenied' 
+              ? 'bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800' 
+              : 'bg-destructive/10 border-destructive/20'
+          }`}>
+            <AlertCircle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+              errorParam === 'AccessDenied' 
+                ? 'text-amber-600 dark:text-amber-400' 
+                : 'text-destructive'
+            }`} />
+            <div className={`text-sm ${
+              errorParam === 'AccessDenied' 
+                ? 'text-amber-800 dark:text-amber-200' 
+                : 'text-destructive'
+            }`}>
               {error || getErrorMessage(errorParam)}
             </div>
           </div>
@@ -154,7 +165,7 @@ function getErrorMessage(error: string | null): string {
     case 'Configuration':
       return 'Error de configuración del servidor. Contacta al administrador.'
     case 'AccessDenied':
-      return 'Acceso denegado. Tu cuenta puede estar pendiente de aprobación.'
+      return 'Cuenta no registrada. Solicita membresía.'
     case 'Verification':
       return 'Error de verificación. El enlace puede haber expirado.'
     case 'OAuthSignin':

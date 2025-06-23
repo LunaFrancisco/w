@@ -54,19 +54,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           })
           console.log("Existing user:", existingUser)
 
-          // If user doesn't exist, create with appropriate role
           if (!existingUser) {
             const isAdmin = user.email === "panshowlate@gmail.com"
             
-            await prisma.user.create({
-              data: {
-                email: user.email!,
-                name: user.name,
-                image: user.image,
-                role: isAdmin ? "ADMIN" : "PENDING",
-                emailVerified: new Date(),
-              }
-            })
+            if (isAdmin) {
+              await prisma.user.create({
+                data: {
+                  email: user.email!,
+                  name: user.name,
+                  image: user.image,
+                  role: "ADMIN",
+                  emailVerified: new Date(),
+                }
+              })
+              return true
+            } else {
+              console.log("Access denied for non-existing user:", user.email)
+              return false
+            }
           }
 
           return true
@@ -85,10 +90,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return url
     },
-  },
-  pages: {
+  },  pages: {
     signIn: "/auth/signin",
-    error: "/auth/error",
+    error: "/auth/signin",
   },
   // Enable both strategies for compatibility
   session: {

@@ -69,7 +69,7 @@ export default function AdminNavigation() {
   return (
     <header className="fixed top-0 right-0 z-40 p-4">
           {/* Right side - Quick actions and user menu */}
-          <div className="flex items-center space-x-3 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+          <div className="grid justify-center sm:flex items-center md:space-x-3 bg-white/95 backdrop-blur-sm md:px-4 py-4 md:py-2 rounded-full shadow-lg">
             {/* Notifications */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -139,10 +139,10 @@ export default function AdminNavigation() {
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-orange-600" />
                   </div>
-                  <span className="hidden md:block text-sm font-medium text-gray-700">
+                  {/* <span className="hidden md:block text-sm font-medium text-gray-700">
                     {session.user.name}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  </span> */}
+                  {/* <ChevronDown className="w-4 h-4 text-gray-500" /> */}
                 </Button>
 
                 {/* Dropdown menu */}
