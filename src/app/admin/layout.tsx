@@ -84,7 +84,7 @@ export default function AdminLayout({
       </div>
 
       <main className="lg:pl-64">
-        <div className="px-4 sm:px-6 lg:px-8 py-8">{children}</div>
+        <div className="px-4 sm:px-6 lg:px-8 py-8 pt-24 md:pt-16">{children}</div>
       </main>
     </div>
   );

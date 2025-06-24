@@ -165,9 +165,10 @@ model Order {
   updatedAt      DateTime    @updatedAt
 
   // Relations
-  user    User        @relation(fields: [userId], references: [id])
-  address Address     @relation(fields: [addressId], references: [id])
-  items   OrderItem[]
+  user     User        @relation(fields: [userId], references: [id])
+  address  Address     @relation(fields: [addressId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
 
   @@map("orders")
 }
@@ -185,6 +186,31 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 
   @@map("order_items")
+}
+
+model Payment {
+  id                  String        @id @default(uuid())
+  orderId             String
+  mercadopagoId       String        @unique
+  status              PaymentStatus @default(PENDING)
+  statusDetail        String?
+  amount              Decimal       @db.Decimal(10, 2)
+  currency            String        @default("CLP")
+  paymentMethod       String?
+  paymentType         String?
+  transactionAmount   Decimal?      @db.Decimal(10, 2)
+  installments        Int?
+  issuerId            String?
+  payerEmail          String?
+  webhookData         Json?
+  mercadopagoResponse Json?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  // Relations
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
 }
 
 enum UserRole {
@@ -206,4 +232,14 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  IN_PROCESS
+  REJECTED
+  CANCELLED
+  REFUNDED
+  CHARGED_BACK
 }

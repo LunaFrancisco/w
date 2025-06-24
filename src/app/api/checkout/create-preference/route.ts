@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 // TODO: Uncomment when MercadoPago API keys are available
-/*
+
 import { 
   createPaymentPreference, 
   formatCartItemsForMP, 
   formatPayerInfo, 
-  formatShippingInfo 
 } from '@/lib/mercadopago'
-*/
+
 
 interface CartItem {
   id: string
@@ -162,7 +161,7 @@ export async function POST(request: NextRequest) {
     )
 
     // TODO: Uncomment when MercadoPago API keys are available
-    /*
+    
     // Format items for MercadoPago
     const mpItems = formatCartItemsForMP(items)
     
@@ -195,26 +194,18 @@ export async function POST(request: NextRequest) {
       where: { id: order.id },
       data: { mercadopagoId: preference.id }
     })
-    */
 
-    // TEMPORARY: Mock MercadoPago response for development
-    const mockPreference = {
-      id: `mock_preference_${order.id}`,
-      init_point: `${process.env.NEXTAUTH_URL}/checkout/success?order=${order.id}`,
-      sandbox_init_point: `${process.env.NEXTAUTH_URL}/checkout/success?order=${order.id}`
-    }
-
-    // Update order with mock preference ID
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { mercadopagoId: mockPreference.id }
+    console.log('MercadoPago preference created:', {
+      orderId: order.id,
+      preferenceId: preference.id,
+      initPoint: preference.init_point
     })
 
     return NextResponse.json({
       order_id: order.id,
-      preference_id: mockPreference.id,
-      init_point: mockPreference.init_point,
-      sandbox_init_point: mockPreference.sandbox_init_point
+      preference_id: preference.id,
+      init_point: preference.init_point,
+      sandbox_init_point: preference.sandbox_init_point
     })
 
   } catch (error) {

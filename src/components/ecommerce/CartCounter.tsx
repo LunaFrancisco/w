@@ -4,18 +4,18 @@ import { useCart } from '@/hooks/useCart'
 import { useEffect, useState } from 'react'
 
 export function CartCounter() {
-  const { getTotalItems } = useCart()
+  const { items, getTotalItems } = useCart()
   const [isClient, setIsClient] = useState(false)
-  const [cartItemsCount, setCartItemsCount] = useState(0)
 
   useEffect(() => {
     setIsClient(true)
-    setCartItemsCount(getTotalItems())
-  }, [getTotalItems])
+  }, [])
 
   if (!isClient) {
     return null
   }
+
+  const cartItemsCount = getTotalItems()
 
   if (cartItemsCount === 0) {
     return null

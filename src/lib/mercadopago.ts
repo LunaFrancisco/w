@@ -38,7 +38,7 @@ export interface PaymentPayer {
   }
   address?: {
     street_name?: string
-    street_number?: number
+    street_number?: string
     zip_code?: string
   }
 }
@@ -49,7 +49,7 @@ export interface PaymentShipment {
   receiver_address: {
     zip_code?: string
     street_name?: string
-    street_number?: number
+    street_number?: string
     floor?: string
     apartment?: string
     city_name?: string

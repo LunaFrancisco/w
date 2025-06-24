@@ -116,7 +116,7 @@ export default function SignInForm() {
         </Button>
 
         <div className="text-center space-y-4">
-          <div className="relative">
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border" />
             </div>
@@ -125,23 +125,23 @@ export default function SignInForm() {
                 ¿Aún no eres miembro?
               </span>
             </div>
-          </div>
+          </div> */}
 
-          <Button variant="outline" asChild className="w-full">
+          {/* <Button variant="outline" asChild className="w-full">
             <Link href="/solicitud-acceso">
               Solicitar Membresía
             </Link>
-          </Button>
+          </Button> */}
         </div>
 
-        <div className="pt-4 border-t border-border">
+        {/* <div className="pt-4 border-t border-border">
           <Button variant="ghost" asChild className="w-full">
             <Link href="/">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Volver al inicio
             </Link>
           </Button>
-        </div>
+        </div> */}
 
         <div className="text-center text-xs text-muted-foreground">
           <p>

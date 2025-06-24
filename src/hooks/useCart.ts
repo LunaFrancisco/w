@@ -71,8 +71,9 @@ export const useCart = create<CartStore>()(
             })
             sendGTMEvent({ event: 'add_to_cart', item_name: existingItem.name });
           } else {
-            // Fetch product details
-            const response = await fetch(`/api/products/${productId}`)
+            // Fetch product details using productId
+            const endpoint = `/api/products/by-id/${productId}`
+            const response = await fetch(endpoint)
             if (!response.ok) throw new Error('Producto no encontrado')
             
             const product = await response.json()
