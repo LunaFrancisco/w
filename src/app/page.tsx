@@ -14,12 +14,16 @@ import {
   Globe
 } from 'lucide-react'
 import HeroSection from '@/components/HeroSection'
+import CategoriesSection from '@/components/CategoriesSection'
 
 export default function HomePage() {
   return (
     <>
       {/* Hero Section with Animated Background */}
       <HeroSection/>
+
+      {/* Categories Section */}
+      <CategoriesSection/>
 
       {/* Features Section with 3D Cards */}
       <section className="py-24 lg:py-32 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
