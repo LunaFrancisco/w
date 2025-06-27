@@ -23,7 +23,8 @@ export default edgeAuth((req) => {
   const publicApiRoutes = [
     '/api/contact',
     '/api/access-request',
-    '/api/auth'
+    '/api/auth',
+    '/api/webhooks/mercadopago',
   ]
 
   // Check if route is public

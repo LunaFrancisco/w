@@ -22,7 +22,7 @@ interface CartStore {
   isDrawerOpen: boolean
   
   // Actions
-  addToCart: (productId: string, quantity?: number) => Promise<void>
+  addToCart: (productSlug: string, quantity?: number) => Promise<void>
   updateQuantity: (productId: string, quantity: number) => void
   removeFromCart: (productId: string) => void
   clearCart: () => void
@@ -46,12 +46,12 @@ export const useCart = create<CartStore>()(
       error: null,
       isDrawerOpen: false,
 
-      addToCart: async (productId: string, quantity = 1) => {
+      addToCart: async (productSlug: string, quantity = 1) => {
         set({ isLoading: true, error: null })
         
         try {
           // Check if item already exists in cart
-          const existingItem = get().items.find(item => item.productId === productId)
+          const existingItem = get().items.find(item => item.slug === productSlug)
           
           if (existingItem) {
             // Update quantity
@@ -64,7 +64,7 @@ export const useCart = create<CartStore>()(
             
             set({
               items: get().items.map(item =>
-                item.productId === productId
+                item.slug === productSlug
                   ? { ...item, quantity: newQuantity }
                   : item
               )
@@ -72,7 +72,7 @@ export const useCart = create<CartStore>()(
             sendGTMEvent({ event: 'add_to_cart', item_name: existingItem.name });
           } else {
             // Fetch product details
-            const response = await fetch(`/api/products/${productId}`)
+            const response = await fetch(`/api/products/${productSlug}`)
             if (!response.ok) throw new Error('Producto no encontrado')
             
             const product = await response.json()
@@ -83,7 +83,7 @@ export const useCart = create<CartStore>()(
             }
             
             const newItem: CartItem = {
-              id: `${productId}-${Date.now()}`, // Unique cart item ID
+              id: `${product.id}-${Date.now()}`, // Unique cart item ID
               productId: product.id,
               name: product.name,
               price: product.price,

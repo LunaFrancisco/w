@@ -27,7 +27,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, user, token }) {
       // For JWT strategy
       if (token && !user) {
-        if (session.user) {          session.user.id = token.id as string
+        if (session.user) {
+          session.user.id = token.id as string
           session.user.role = (token.role as UserRole) || "PENDING" as UserRole
         }
         return session

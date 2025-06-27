@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { XCircle, ArrowLeft, RefreshCw } from 'lucide-react'
@@ -8,7 +7,7 @@ import Link from 'next/link'
 export default async function CheckoutFailurePage({
   searchParams,
 }: {
-  searchParams: { order?: string; payment_id?: string; status?: string }
+  searchParams: { order_id?: string; payment_id?: string; status?: string; collection_id?: string }
 }) {
   const session = await auth()
   
@@ -16,9 +15,9 @@ export default async function CheckoutFailurePage({
     redirect('/auth/signin')
   }
 
-  const orderId = searchParams.order
+  const orderId = searchParams.order_id
   const paymentId = searchParams.payment_id
-  const status = searchParams.status
+  const collectionId = searchParams.collection_id
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -45,10 +44,10 @@ export default async function CheckoutFailurePage({
             </div>
           )}
           
-          {paymentId && (
+          {(paymentId || collectionId) && (
             <div className="flex justify-between items-center py-2 border-b border-gray-200">
               <span className="text-sm font-medium text-gray-600">ID de Pago:</span>
-              <span className="text-sm font-mono text-gray-900">{paymentId}</span>
+              <span className="text-sm font-mono text-gray-900">{paymentId || collectionId}</span>
             </div>
           )}
           

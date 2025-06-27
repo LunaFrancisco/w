@@ -45,7 +45,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
     setIsLoading(true)
     try {
-      await addToCart(product.id, 1)
+      await addToCart(product.slug, 1)
     } catch (error) {
       console.error('Error adding to cart:', error)
     } finally {

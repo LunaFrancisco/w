@@ -152,22 +152,23 @@ model Product {
 }
 
 model Order {
-  id             String      @id @default(uuid())
+  id             String        @id @default(uuid())
   userId         String
   addressId      String
-  status         OrderStatus @default(PENDING)
-  subtotal       Decimal     @db.Decimal(10, 2)
-  shippingCost   Decimal     @db.Decimal(10, 2)
-  total          Decimal     @db.Decimal(10, 2)
-  mercadopagoId  String?
-  paymentStatus  String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  status         OrderStatus   @default(PENDING)
+  subtotal       Decimal       @db.Decimal(10, 2)
+  shippingCost   Decimal       @db.Decimal(10, 2)
+  total          Decimal       @db.Decimal(10, 2)
+  preferenceId   String?
+  paymentStatus  PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   // Relations
-  user    User        @relation(fields: [userId], references: [id])
-  address Address     @relation(fields: [addressId], references: [id])
-  items   OrderItem[]
+  user     User        @relation(fields: [userId], references: [id])
+  address  Address     @relation(fields: [addressId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
 
   @@map("orders")
 }
@@ -185,6 +186,31 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 
   @@map("order_items")
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  orderId           String
+  mercadopagoId     String?       @unique
+  preferenceId      String?
+  collector_id      String?
+  status            PaymentStatus @default(PENDING)
+  statusDetail      String?
+  paymentType       String?
+  paymentMethod     String?
+  amount            Decimal       @db.Decimal(10, 2)
+  transactionAmount Decimal?      @db.Decimal(10, 2)
+  currency          String        @default("CLP")
+  dateCreated       DateTime?
+  dateApproved      DateTime?
+  externalReference String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
 }
 
 enum UserRole {
@@ -206,4 +232,16 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  AUTHORIZED
+  IN_PROCESS
+  IN_MEDIATION
+  REJECTED
+  CANCELLED
+  REFUNDED
+  CHARGED_BACK
 }
