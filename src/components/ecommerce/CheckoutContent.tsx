@@ -18,10 +18,13 @@ interface Address {
   isDefault: boolean
 }
 
+type PaymentGateway = 'MERCADOPAGO' | 'FLOW'
+
 export function CheckoutContent() {
   const { items, getTotalPrice } = useCart()
   const [addresses, setAddresses] = useState<Address[]>([])
   const [selectedAddress, setSelectedAddress] = useState<string>('')
+  const [selectedGateway, setSelectedGateway] = useState<PaymentGateway>('MERCADOPAGO')
   const [shippingCost, setShippingCost] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -88,34 +91,60 @@ export function CheckoutContent() {
     setError(null)
 
     try {
-      const response = await fetch('/api/checkout/create-preference', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: items,
-          addressId: selectedAddress,
-          shippingCost: shippingCost,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Error al procesar el pago')
+      if (selectedGateway === 'FLOW') {
+        await handleFlowCheckout()
+      } else {
+        await handleMercadoPagoCheckout()
       }
-
-      const { init_point } = await response.json()
-      
-      // Redirect to MercadoPago CheckoutPro
-      const paymentUrl = init_point
-      window.location.href = paymentUrl
-
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error al procesar el pago')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleMercadoPagoCheckout = async () => {
+    const response = await fetch('/api/checkout/create-preference', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        items: items,
+        addressId: selectedAddress,
+        shippingCost: shippingCost,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Error al procesar el pago con MercadoPago')
+    }
+
+    const { init_point } = await response.json()
+    window.location.href = init_point
+  }
+
+  const handleFlowCheckout = async () => {
+    const response = await fetch('/api/checkout/create-flow-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        items: items,
+        addressId: selectedAddress,
+        shippingCost: shippingCost,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Error al procesar el pago con Flow.cl')
+    }
+
+    const { paymentUrl } = await response.json()
+    window.location.href = paymentUrl
   }
 
   const formatPrice = (price: number) => {
@@ -267,23 +296,113 @@ export function CheckoutContent() {
               Método de Pago
             </h2>
             
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">
-                    Pago seguro con MercadoPago
-                  </h3>
-                  <p className="text-sm text-blue-700 mt-1">
-                    Acepta tarjetas de crédito, débito y transferencias bancarias
-                  </p>
-                </div>
+            {/* Payment Gateway Selector */}
+            <div className="space-y-4 mb-6">
+              <div className="grid grid-cols-2 gap-3">
+                <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                  selectedGateway === 'MERCADOPAGO' 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="paymentGateway"
+                    value="MERCADOPAGO"
+                    checked={selectedGateway === 'MERCADOPAGO'}
+                    onChange={(e) => setSelectedGateway(e.target.value as PaymentGateway)}
+                    className="sr-only"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center">
+                      <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                        selectedGateway === 'MERCADOPAGO' 
+                          ? 'border-blue-500 bg-blue-500' 
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedGateway === 'MERCADOPAGO' && (
+                          <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">MercadoPago</p>
+                        <p className="text-xs text-gray-600">Tarjetas y transferencias</p>
+                      </div>
+                    </div>
+                  </div>
+                </label>
+
+                <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                  selectedGateway === 'FLOW' 
+                    ? 'border-green-500 bg-green-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="paymentGateway"
+                    value="FLOW"
+                    checked={selectedGateway === 'FLOW'}
+                    onChange={(e) => setSelectedGateway(e.target.value as PaymentGateway)}
+                    className="sr-only"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center">
+                      <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                        selectedGateway === 'FLOW' 
+                          ? 'border-green-500 bg-green-500' 
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedGateway === 'FLOW' && (
+                          <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Flow.cl</p>
+                        <p className="text-xs text-gray-600">Pagos locales Chile</p>
+                      </div>
+                    </div>
+                  </div>
+                </label>
               </div>
             </div>
+
+            {/* Payment Gateway Info */}
+            {selectedGateway === 'MERCADOPAGO' ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">
+                      Pago seguro con MercadoPago
+                    </h3>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Acepta tarjetas de crédito, débito y transferencias bancarias
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-green-800">
+                      Pago seguro con Flow.cl
+                    </h3>
+                    <p className="text-sm text-green-700 mt-1">
+                      Webpay, transferencias bancarias, Khipu, Mach y más
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3">
               <div className="flex items-center text-sm text-gray-600">
@@ -306,16 +425,16 @@ export function CheckoutContent() {
             <Button
               onClick={handleCheckout}
               disabled={submitting || !selectedAddress || addresses.length === 0}
-              className="w-full gradient-green text-white"
+              className={`w-full text-white ${selectedGateway === 'FLOW' ? 'bg-green-600 hover:bg-green-700' : 'gradient-green'}`}
               size="lg"
             >
               {submitting ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                  Procesando...
+                  Procesando con {selectedGateway === 'FLOW' ? 'Flow.cl' : 'MercadoPago'}...
                 </div>
               ) : (
-                `Pagar ${formatPrice(total)}`
+                `Pagar ${formatPrice(total)} con ${selectedGateway === 'FLOW' ? 'Flow.cl' : 'MercadoPago'}`
               )}
             </Button>
             

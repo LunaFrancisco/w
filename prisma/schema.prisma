@@ -191,9 +191,16 @@ model OrderItem {
 model Payment {
   id                String        @id @default(uuid())
   orderId           String
+  // MercadoPago fields
   mercadopagoId     String?       @unique
   preferenceId      String?
   collector_id      String?
+  // Flow.cl fields
+  flowToken         String?       @unique
+  flowOrderId       String?
+  flowStatus        Int?
+  // Common fields
+  paymentGateway    PaymentGateway @default(MERCADOPAGO)
   status            PaymentStatus @default(PENDING)
   statusDetail      String?
   paymentType       String?
@@ -244,4 +251,9 @@ enum PaymentStatus {
   CANCELLED
   REFUNDED
   CHARGED_BACK
+}
+
+enum PaymentGateway {
+  MERCADOPAGO
+  FLOW
 }

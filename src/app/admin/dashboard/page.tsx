@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { RefreshCw, Users, Package, ShoppingCart, ClipboardList, TrendingUp, Clock, AlertTriangle } from 'lucide-react'
+import { RefreshCw, Users, Package, ShoppingCart, ClipboardList, TrendingUp, Clock, AlertTriangle, ExternalLink } from 'lucide-react'
 
 interface DashboardStats {
   totalUsers: number
@@ -271,10 +272,19 @@ function RecentOrders({ orders }: { orders: any[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ShoppingCart className="h-5 w-5" />
-          Pedidos Recientes
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5" />
+            Pedidos Recientes
+          </CardTitle>
+          <Link
+            href="/admin/pedidos"
+            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Ver todos
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {orders.length === 0 ? (
@@ -284,18 +294,24 @@ function RecentOrders({ orders }: { orders: any[] }) {
           </div>
         ) : (
           orders.map((order) => (
-            <div key={order.id} className="flex items-center justify-between p-4 bg-white border rounded-lg hover:shadow-sm transition-shadow">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  <p className="font-medium text-sm">#{order.id.slice(-8)}</p>
-                  {getStatusBadge(order.status)}
+            <Link
+              key={order.id}
+              href={`/admin/pedidos/${order.id}`}
+              className="block"
+            >
+              <div className="flex items-center justify-between p-4 bg-white border rounded-lg hover:shadow-sm hover:bg-gray-50 transition-all cursor-pointer">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <p className="font-medium text-sm">#{order.id.slice(-8)}</p>
+                    {getStatusBadge(order.status)}
+                  </div>
+                  <p className="text-xs text-gray-600">{order.user.name}</p>
                 </div>
-                <p className="text-xs text-gray-600">{order.user.name}</p>
+                <div className="text-right">
+                  <p className="font-bold text-sm">${Number(order.total).toLocaleString('es-CL')}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-sm">${Number(order.total).toLocaleString('es-CL')}</p>
-              </div>
-            </div>
+            </Link>
           ))
         )}
       </CardContent>

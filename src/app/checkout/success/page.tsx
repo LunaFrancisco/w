@@ -8,19 +8,73 @@ import { SuccessHandler } from '@/components/checkout/SuccessHandler'
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order_id?: string; payment_id?: string; status?: string; collection_id?: string }>
+  searchParams: Promise<{ order_id?: string; payment_id?: string; status?: string; collection_id?: string; token?: string }>
 }) {
   const session = await auth()
   
-  if (!session || session.user.role === 'PENDING') {
-    redirect('/auth/signin')
-  }
+  // Permitir acceso sin autenticación para redirects de Flow.cl
+  // Si no hay sesión, mostrar página simplificada
 
   const params = await searchParams
   const orderId = params.order_id
   const paymentId = params.payment_id
   const collectionId = params.collection_id
   const status = params.status
+  const token = params.token
+
+  // Si no hay sesión, mostrar página simplificada de éxito
+  if (!session || session.user.role === 'PENDING') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
+              <CheckCircle className="h-10 w-10 text-green-600" />
+            </div>
+            
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              ¡Pago Procesado!
+            </h2>
+            
+            <p className="mt-2 text-sm text-gray-600">
+              Tu pago ha sido procesado correctamente
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
+            {orderId && (
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                <span className="text-sm font-medium text-gray-600">Pedido:</span>
+                <span className="text-sm font-mono text-gray-900">#{orderId.slice(-8).toUpperCase()}</span>
+              </div>
+            )}
+            
+            {token && (
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                <span className="text-sm font-medium text-gray-600">Token:</span>
+                <span className="text-sm font-mono text-gray-900">{token.slice(-8).toUpperCase()}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <Button asChild className="w-full gradient-green text-white">
+              <Link href="/auth/signin?callbackUrl=/pedidos">
+                Iniciar sesión para ver pedidos
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            
+            <Button variant="outline" asChild className="w-full">
+              <Link href="/productos">
+                Continuar comprando
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

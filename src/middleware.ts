@@ -16,7 +16,9 @@ export default edgeAuth((req) => {
     '/500',
     '/politica-privacidad',
     '/terminos-condiciones',
-    '/politica-cookies'
+    '/politica-cookies',
+    '/checkout/success',
+    '/checkout/failure'
   ]
 
   // API routes that don't require authentication
@@ -25,6 +27,8 @@ export default edgeAuth((req) => {
     '/api/access-request',
     '/api/auth',
     '/api/webhooks/mercadopago',
+    '/api/webhooks/flow',
+    '/api/flow/return',
   ]
 
   // Check if route is public
