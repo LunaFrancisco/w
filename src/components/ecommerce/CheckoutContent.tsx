@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useCart } from '@/hooks/useCart'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, CreditCard, MapPin, User } from 'lucide-react'
+import { ArrowLeft, CreditCard, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
 interface Address {
@@ -19,13 +18,8 @@ interface Address {
   isDefault: boolean
 }
 
-interface CheckoutContentProps {
-  userId: string
-}
-
-export function CheckoutContent({ userId }: CheckoutContentProps) {
-  const router = useRouter()
-  const { items, getTotalPrice, clearCart } = useCart()
+export function CheckoutContent() {
+  const { items, getTotalPrice } = useCart()
   const [addresses, setAddresses] = useState<Address[]>([])
   const [selectedAddress, setSelectedAddress] = useState<string>('')
   const [shippingCost, setShippingCost] = useState(0)
@@ -111,10 +105,10 @@ export function CheckoutContent({ userId }: CheckoutContentProps) {
         throw new Error(errorData.error || 'Error al procesar el pago')
       }
 
-      const { init_point, sandbox_init_point } = await response.json()
+      const { init_point } = await response.json()
       
-      // Redirect to MercadoPago
-      const paymentUrl = process.env.NODE_ENV === 'production' ? init_point : sandbox_init_point
+      // Redirect to MercadoPago CheckoutPro
+      const paymentUrl = init_point
       window.location.href = paymentUrl
 
     } catch (error) {

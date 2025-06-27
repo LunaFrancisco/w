@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, AccessRequestStatus, OrderStatus } from '@prisma/client'
+import { PrismaClient, UserRole, AccessRequestStatus, OrderStatus, PaymentStatus } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -9,6 +9,7 @@ async function main() {
   if (process.env.NODE_ENV === 'development') {
     console.log('🧹 Cleaning up existing data...')
     await prisma.orderItem.deleteMany()
+    await prisma.payment.deleteMany()
     await prisma.order.deleteMany()
     await prisma.product.deleteMany()
     await prisma.category.deleteMany()
@@ -355,8 +356,8 @@ async function main() {
       subtotal: 289000,
       shippingCost: 3500,
       total: 292500,
-      paymentStatus: 'approved',
-      mercadopagoId: 'MP001234567',
+      paymentStatus: PaymentStatus.APPROVED,
+      preferenceId: 'PREF001234567',
       createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
       updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),  // 8 days ago
     },
@@ -371,8 +372,8 @@ async function main() {
       subtotal: 180000,
       shippingCost: 4000,
       total: 184000,
-      paymentStatus: 'approved',
-      mercadopagoId: 'MP001234568',
+      paymentStatus: PaymentStatus.APPROVED,
+      preferenceId: 'PREF001234568',
       createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),  // 1 day ago
     },
@@ -387,8 +388,8 @@ async function main() {
       subtotal: 1650000,
       shippingCost: 4000,
       total: 1654000,
-      paymentStatus: 'approved',
-      mercadopagoId: 'MP001234569',
+      paymentStatus: PaymentStatus.APPROVED,
+      preferenceId: 'PREF001234569',
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),  // 1 day ago
     },
@@ -403,8 +404,8 @@ async function main() {
       subtotal: 12500000,
       shippingCost: 3500,
       total: 12503500,
-      paymentStatus: 'approved',
-      mercadopagoId: 'MP001234570',
+      paymentStatus: PaymentStatus.APPROVED,
+      preferenceId: 'PREF001234570',
       createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
       updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),      // 12 hours ago
     },
@@ -419,8 +420,8 @@ async function main() {
       subtotal: 450000,
       shippingCost: 4000,
       total: 454000,
-      paymentStatus: 'pending',
-      mercadopagoId: 'MP001234571',
+      paymentStatus: PaymentStatus.PENDING,
+      preferenceId: 'PREF001234571',
       createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
       updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
     },
@@ -501,6 +502,103 @@ async function main() {
     })
   }
 
+  // Create payment records for orders
+  console.log('💳 Creating payment records...')
+  
+  // Payment for Order 1 (Delivered - Approved)
+  await prisma.payment.create({
+    data: {
+      orderId: order1.id,
+      mercadopagoId: 'MP001234567',
+      preferenceId: 'PREF001234567',
+      collectionId: 'COL001234567',
+      status: PaymentStatus.APPROVED,
+      statusDetail: 'accredited',
+      paymentType: 'credit_card',
+      paymentMethod: 'visa',
+      amount: 292500,
+      transactionAmount: 292500,
+      currency: 'CLP',
+      externalReference: order1.id,
+      dateCreated: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      dateApproved: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    },
+  })
+
+  // Payment for Order 2 (Shipped - Approved)
+  await prisma.payment.create({
+    data: {
+      orderId: order2.id,
+      mercadopagoId: 'MP001234568',
+      preferenceId: 'PREF001234568',
+      collectionId: 'COL001234568',
+      status: PaymentStatus.APPROVED,
+      statusDetail: 'accredited',
+      paymentType: 'debit_card',
+      paymentMethod: 'master',
+      amount: 184000,
+      transactionAmount: 184000,
+      currency: 'CLP',
+      externalReference: order2.id,
+      dateCreated: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      dateApproved: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    },
+  })
+
+  // Payment for Order 3 (Preparing - Approved)
+  await prisma.payment.create({
+    data: {
+      orderId: order3.id,
+      mercadopagoId: 'MP001234569',
+      preferenceId: 'PREF001234569',
+      collectionId: 'COL001234569',
+      status: PaymentStatus.APPROVED,
+      statusDetail: 'accredited',
+      paymentType: 'bank_transfer',
+      paymentMethod: 'pse',
+      amount: 1654000,
+      transactionAmount: 1654000,
+      currency: 'CLP',
+      externalReference: order3.id,
+      dateCreated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      dateApproved: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    },
+  })
+
+  // Payment for Order 4 (Paid - Approved)
+  await prisma.payment.create({
+    data: {
+      orderId: order4.id,
+      mercadopagoId: 'MP001234570',
+      preferenceId: 'PREF001234570',
+      collectionId: 'COL001234570',
+      status: PaymentStatus.APPROVED,
+      statusDetail: 'accredited',
+      paymentType: 'credit_card',
+      paymentMethod: 'visa',
+      amount: 12503500,
+      transactionAmount: 12503500,
+      currency: 'CLP',
+      externalReference: order4.id,
+      dateCreated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      dateApproved: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    },
+  })
+
+  // Payment for Order 5 (Pending - Pending)
+  await prisma.payment.create({
+    data: {
+      orderId: order5.id,
+      preferenceId: 'PREF001234571',
+      status: PaymentStatus.PENDING,
+      statusDetail: 'pending_payment_waiting_transfer',
+      amount: 454000,
+      currency: 'CLP',
+      externalReference: order5.id,
+      dateCreated: new Date(Date.now() - 6 * 60 * 60 * 1000),
+    },
+  })
+
   console.log('✅ Database seeding completed successfully!')
   console.log('\n📊 Summary:')
   console.log(`👤 Users created: ${await prisma.user.count()}`)
@@ -511,6 +609,7 @@ async function main() {
   console.log(`🛍️ Products created: ${await prisma.product.count()}`)
   console.log(`🛒 Orders created: ${await prisma.order.count()}`)
   console.log(`📄 Order items created: ${await prisma.orderItem.count()}`)
+  console.log(`💳 Payments created: ${await prisma.payment.count()}`)
 
   console.log('\n🔑 Test accounts created:')
   console.log('✅ Client 1: maria.gonzalez@email.com (Has 2 orders: delivered & paid)')

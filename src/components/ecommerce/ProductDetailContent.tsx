@@ -57,7 +57,7 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
 
     setIsLoading(true)
     try {
-      await addToCart(product.id, quantity)
+      await addToCart(product.slug, quantity)
       setAddedToCart(true)
       setTimeout(() => setAddedToCart(false), 3000)
     } catch (error) {

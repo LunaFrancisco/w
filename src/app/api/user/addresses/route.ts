@@ -25,8 +25,21 @@ export async function GET() {
       )
     }
 
+    // Find user by email to get correct ID
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email! },
+      select: { id: true }
+    })
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuario no encontrado' },
+        { status: 404 }
+      )
+    }
+
     const addresses = await prisma.address.findMany({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       orderBy: [
         { isDefault: 'desc' }, // Default address first
         { createdAt: 'asc' }
@@ -56,6 +69,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Find user by email since ID might be different
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email! },
+      select: { id: true, email: true }
+    })
+    
+    if (!user) {
+      console.error('User not found in database by email:', session.user.email)
+      return NextResponse.json(
+        { error: 'Usuario no encontrado en la base de datos' },
+        { status: 404 }
+      )
+    }
+
     const body = await request.json()
     
     // Validate the request body
@@ -74,7 +101,7 @@ export async function POST(request: NextRequest) {
     if (isDefault) {
       await prisma.address.updateMany({
         where: { 
-          userId: session.user.id,
+          userId: user.id,
           isDefault: true 
         },
         data: { isDefault: false },
@@ -83,14 +110,14 @@ export async function POST(request: NextRequest) {
 
     // Check if this is the user's first address - if so, make it default
     const existingAddressCount = await prisma.address.count({
-      where: { userId: session.user.id }
+      where: { userId: user.id }
     })
 
     const shouldBeDefault = isDefault || existingAddressCount === 0
 
     const address = await prisma.address.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         name,
         street,
         commune,

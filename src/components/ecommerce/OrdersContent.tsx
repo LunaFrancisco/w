@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Package, MapPin, Calendar, CreditCard, ShoppingBag, Eye, Settings } from 'lucide-react'
+import { Package, MapPin, Calendar, CreditCard, ShoppingBag, Eye } from 'lucide-react'
 import { OrderStatusSelect } from '@/components/orders/OrderStatusSelect'
 import { useSession } from 'next-auth/react'
 
