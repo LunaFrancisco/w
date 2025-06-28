@@ -1,5 +1,35 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure the following variables:
+
+### Required
+- `DATABASE_URL` - PostgreSQL database connection string
+- `NEXTAUTH_SECRET` - Random secret for NextAuth.js
+- `NEXTAUTH_URL` - Application URL (http://localhost:3000 for dev)
+
+### Google OAuth
+- `GOOGLE_CLIENT_ID` - Google OAuth client ID
+- `GOOGLE_CLIENT_SECRET` - Google OAuth client secret
+
+### Payment Gateways
+
+#### MercadoPago
+- `MP_ACCESS_TOKEN` - MercadoPago access token
+- `MP_PUBLIC_KEY` - MercadoPago public key
+- `MP_WEBHOOK_SECRET` - MercadoPago webhook secret
+
+#### Flow.cl
+- `FLOW_API_KEY` - Flow.cl API key
+- `FLOW_SECRET_KEY` - Flow.cl secret key for HMAC signatures
+- `FLOW_SANDBOX_MODE` - Set to `true` for testing, `false` for production
+
+### Optional
+- `SUPABASE_*` - Supabase configuration (if using)
+- `RESEND_API_KEY` - Resend API key for emails
+- `NEXT_PUBLIC_CLARITY_PROJECT_ID` - Microsoft Clarity analytics
+
 ## Getting Started
 
 First, run the development server:
