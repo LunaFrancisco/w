@@ -73,15 +73,7 @@ export default function AccessRequestActions({ requestId, onUpdate }: AccessRequ
       )}
       
       <div className="flex space-x-3">
-        {!showNotes ? (
           <>
-            <Button
-              onClick={() => setShowNotes(true)}
-              variant="outline"
-              size="sm"
-            >
-              Añadir notas
-            </Button>
             <Button
               onClick={() => handleAction('APPROVED')}
               disabled={isProcessing}
@@ -99,36 +91,6 @@ export default function AccessRequestActions({ requestId, onUpdate }: AccessRequ
               {isProcessing ? 'Procesando...' : 'Rechazar'}
             </Button>
           </>
-        ) : (
-          <>
-            <Button
-              onClick={() => {
-                setShowNotes(false)
-                setNotes('')
-              }}
-              variant="outline"
-              size="sm"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => handleAction('APPROVED')}
-              disabled={isProcessing}
-              className="bg-green-600 hover:bg-green-700"
-              size="sm"
-            >
-              {isProcessing ? 'Procesando...' : 'Aprobar'}
-            </Button>
-            <Button
-              onClick={() => handleAction('REJECTED')}
-              disabled={isProcessing}
-              variant="destructive"
-              size="sm"
-            >
-              {isProcessing ? 'Procesando...' : 'Rechazar'}
-            </Button>
-          </>
-        )}
       </div>
     </div>
   )

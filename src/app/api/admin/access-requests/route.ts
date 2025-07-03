@@ -14,46 +14,67 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { requestId, status, adminNotes } = body
+    const { requestId, status, adminNotes, updateNotesOnly } = body
 
-    if (!requestId || !status) {
+    if (!requestId) {
       return NextResponse.json(
-        { error: 'Faltan datos requeridos' },
+        { error: 'ID de solicitud requerido' },
         { status: 400 }
       )
     }
 
-    if (!['APPROVED', 'REJECTED'].includes(status)) {
-      return NextResponse.json(
-        { error: 'Status inválido' },
-        { status: 400 }
-      )
+    // If updating notes only, we don't need to validate status change
+    if (!updateNotesOnly) {
+      if (!status) {
+        return NextResponse.json(
+          { error: 'Status requerido para procesar solicitud' },
+          { status: 400 }
+        )
+      }
+
+      if (!['APPROVED', 'REJECTED'].includes(status)) {
+        return NextResponse.json(
+          { error: 'Status inválido' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Prepare update data based on operation type
+    const updateData: any = {
+      adminNotes: adminNotes || null,
+    }
+
+    // If not just updating notes, also update status and processing info
+    if (!updateNotesOnly) {
+      updateData.status = status
+      updateData.processedAt = new Date()
+      updateData.processedBy = session.user.id
     }
 
     // Update the access request
     const updatedRequest = await prisma.accessRequest.update({
       where: { id: requestId },
-      data: {
-        status,
-        adminNotes: adminNotes || null,
-        processedAt: new Date(),
-        processedBy: session.user.id
-      },
+      data: updateData,
       include: {
         user: true
       }
     })
 
-    // If approved, update user role to CLIENT
-    if (status === 'APPROVED') {
+    // If approved, update user role to CLIENT (only for status changes)
+    if (!updateNotesOnly && status === 'APPROVED') {
       await prisma.user.update({
         where: { id: updatedRequest.userId },
         data: { role: 'CLIENT' }
       })
     }
 
+    const message = updateNotesOnly 
+      ? 'Notas actualizadas correctamente'
+      : `Solicitud ${status === 'APPROVED' ? 'aprobada' : 'rechazada'} correctamente`
+
     return NextResponse.json({
-      message: 'Solicitud procesada correctamente',
+      message,
       request: updatedRequest
     })
 

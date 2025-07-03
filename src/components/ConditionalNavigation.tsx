@@ -8,7 +8,7 @@ export default function ConditionalNavigation() {
   const pathname = usePathname();
 
   // Don't render navigation on admin routes
-  if (pathname.startsWith("/admin") || pathname.startsWith("/auth")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/auth") || pathname.startsWith("/solicitud-acceso")) {
     return null;
   }
 
