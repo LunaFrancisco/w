@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -373,7 +374,10 @@ function AccessRequestCard({ request, onUpdate }: {
   return (
     <div className="border rounded-xl p-6 space-y-4 hover:shadow-lg transition-all bg-white border-gray-200">
       <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-4">
+        <Link 
+          href={`/admin/solicitudes/${request.id}`}
+          className="flex items-center space-x-4 flex-1 cursor-pointer group"
+        >
           {request.user.image && (
             <img
               src={request.user.image}
@@ -382,10 +386,12 @@ function AccessRequestCard({ request, onUpdate }: {
             />
           )}
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg">{request.user.name}</h3>
+            <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">
+              {request.user.name}
+            </h3>
             <p className="text-sm text-gray-600">{request.user.email}</p>
           </div>
-        </div>
+        </Link>
         {getStatusBadge(request.status)}
       </div>
 
