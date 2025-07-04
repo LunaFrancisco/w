@@ -25,6 +25,7 @@ export default edgeAuth((req) => {
   const publicApiRoutes = [
     '/api/contact',
     '/api/access-request',
+    '/api/upload/direct',
     '/api/auth',
     '/api/webhooks/mercadopago',
     '/api/webhooks/flow',

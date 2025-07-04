@@ -72,7 +72,11 @@ model AccessRequest {
   id          String              @id @default(uuid())
   userId      String              @unique
   status      AccessRequestStatus @default(PENDING)
-  documents   Json[]
+  documents   Json[]              // Only document URLs
+  phone       String
+  company     String?
+  position    String?
+  reason      String
   adminNotes  String?
   createdAt   DateTime            @default(now())
   processedAt DateTime?

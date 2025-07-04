@@ -69,9 +69,25 @@ async function main() {
     data: {
       userId: pendingUser.id,
       status: AccessRequestStatus.PENDING,
+      phone: '+56979577880',
+      company: 'Tech Company',
+      position: 'Developer',
+      reason: 'I want to access premium products and exclusive offers available to Club W members.',
       documents: [
-        'https://example.com/cv-pedro.pdf',
-        'https://example.com/recommendation-pedro.pdf'
+        {
+          key: 'access-requests/example-cv.pdf',
+          url: 'https://example.com/cv-pedro.pdf',
+          filename: 'cv-pedro.pdf',
+          contentType: 'application/pdf',
+          size: 150000
+        },
+        {
+          key: 'access-requests/example-recommendation.pdf', 
+          url: 'https://example.com/recommendation-pedro.pdf',
+          filename: 'recommendation-pedro.pdf',
+          contentType: 'application/pdf',
+          size: 95000
+        }
       ],
     },
   })
@@ -81,7 +97,19 @@ async function main() {
     data: {
       userId: clientUser1.id,
       status: AccessRequestStatus.APPROVED,
-      documents: ['https://example.com/cv-maria.pdf'],
+      phone: '+56987654321',
+      company: 'Design Studio',
+      position: 'UX Designer',
+      reason: 'I am a design professional looking for high-quality materials and exclusive access to premium products.',
+      documents: [
+        {
+          key: 'access-requests/example-cv-maria.pdf',
+          url: 'https://example.com/cv-maria.pdf',
+          filename: 'cv-maria.pdf',
+          contentType: 'application/pdf',
+          size: 125000
+        }
+      ],
       processedAt: new Date(),
       adminNotes: 'Usuario aprobado. Perfil profesional excelente.',
     },
