@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import AccessRequestActions from '@/components/AccessRequestActions'
+import DocumentPreview from '@/components/DocumentPreview'
 import { 
   RefreshCw, 
   ArrowLeft, 
@@ -30,7 +31,13 @@ interface AccessRequest {
   createdAt: string
   processedAt?: string
   adminNotes?: string
-  documents?: string[]
+  documents?: Array<{
+    key: string
+    url: string
+    filename: string
+    contentType: string
+    size: number
+  }>
   user: {
     id: string
     name: string
@@ -342,20 +349,12 @@ export default function AccessRequestDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {request.documents.map((doc: string, index: number) => (
-                    <a
+                <div className="grid grid-cols-1 gap-3">
+                  {request.documents.map((doc, index: number) => (
+                    <DocumentPreview
                       key={index}
-                      href={doc}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-                    >
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      <span className="text-blue-700 font-medium">
-                        Documento {index + 1}
-                      </span>
-                    </a>
+                      document={doc}
+                    />
                   ))}
                 </div>
               </CardContent>

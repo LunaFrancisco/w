@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import FileUpload from '@/components/ui/file-upload'
+import FileUploadSimple from '@/components/ui/file-upload-simple'
+import { STORAGE_PREFIXES } from '@/lib/storage'
 import { 
   UserPlus, 
   Send, 
@@ -20,6 +21,14 @@ import {
   FileText,
   AlertCircle 
 } from 'lucide-react'
+
+interface UploadedFileResult {
+  key: string
+  url: string
+  filename: string
+  contentType: string
+  size: number
+}
 
 const accessRequestSchema = z.object({
   firstName: z
@@ -66,6 +75,7 @@ export default function AccessRequestForm() {
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [documents, setDocuments] = useState<File[]>([])
+  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedFileResult[]>([])
 
   const {
     register,
@@ -84,28 +94,52 @@ export default function AccessRequestForm() {
     setSubmitError(null)
 
     try {
-      // Create FormData for file upload
-      const formData = new FormData()
-      
-      // Add form fields
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== '') {
-          formData.append(key, value.toString())
-        }
-      })
+      // Check if we have documents
+      if (documents.length === 0) {
+        throw new Error('Debes subir al menos un documento')
+      }
 
-      // Add documents
-      documents.forEach((file, index) => {
-        formData.append(`document_${index}`, file)
-      })
+      // Step 1: Upload documents to R2
+      const uploadedDocuments: UploadedFileResult[] = []
+      
+      for (const document of documents) {
+        const formData = new FormData()
+        formData.append('file', document)
+        formData.append('prefix', 'access-requests')
+        
+        const uploadResponse = await fetch('/api/upload/direct', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text()
+          throw new Error(`Error al subir el archivo ${document.name}: ${uploadResponse.status} ${errorText}`)
+        }
+
+        const uploadResult = await uploadResponse.json()
+        uploadedDocuments.push(uploadResult)
+      }
+
+      // Step 2: Submit form with uploaded document references
+      const formData = {
+        ...data,
+        documents: uploadedDocuments,
+        acceptTerms: data.acceptTerms ? 'true' : 'false',
+      }
 
       const response = await fetch('/api/access-request', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        throw new Error('Error al enviar la solicitud')
+        throw new Error(result.error || 'Error al enviar la solicitud')
       }
 
       setSubmitSuccess(true)
@@ -364,12 +398,17 @@ export default function AccessRequestForm() {
               CV, carta de recomendación, documento de identidad, etc.
             </p>
             
-            <FileUpload
+            <FileUploadSimple
               maxFiles={3}
               maxSizeInMB={10}
               onFilesChange={setDocuments}
               disabled={isSubmitting}
             />
+            {documents.length === 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Debes subir al menos un documento para completar tu solicitud.
+              </p>
+            )}
           </div>
 
           {/* Terms and Conditions */}
@@ -415,7 +454,7 @@ export default function AccessRequestForm() {
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={isSubmitting || !acceptTerms}
+            disabled={isSubmitting || !acceptTerms || documents.length === 0}
             className="w-full gradient-green text-white border-0 py-6 text-lg"
           >
             {isSubmitting ? (

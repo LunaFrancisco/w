@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import AccessRequestActions from '@/components/AccessRequestActions'
+import DocumentPreview from '@/components/DocumentPreview'
 import { RefreshCw, Users, AlertTriangle, Search, Clock, CheckCircle, XCircle } from 'lucide-react'
 
 interface AccessRequest {
@@ -16,7 +17,13 @@ interface AccessRequest {
   createdAt: string
   processedAt?: string
   adminNotes?: string
-  documents?: string[]
+  documents?: Array<{
+    key: string
+    url: string
+    filename: string
+    contentType: string
+    size: number
+  }>
   user: {
     id: string
     name: string
@@ -249,7 +256,7 @@ export default function AccessRequestsPage() {
             Solicitudes ({filteredRequests.length})
             {searchTerm && (
               <span className="text-sm font-normal text-gray-500 ml-2">
-                (filtrado por "{searchTerm}")
+              (filtrado por &quot;{searchTerm}&quot;)
               </span>
             )}
           </CardTitle>
@@ -429,17 +436,13 @@ function AccessRequestCard({ request, onUpdate }: {
       {request.documents && request.documents.length > 0 && (
         <div>
           <h4 className="font-semibold text-gray-900 mb-2">Documentos adjuntos:</h4>
-          <div className="flex flex-wrap gap-2">
-            {request.documents.map((doc: string, index: number) => (
-              <a
+          <div className="grid gap-2">
+            {request.documents.map((doc, index: number) => (
+              <DocumentPreview
                 key={index}
-                href={doc}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:text-blue-800 underline bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors"
-              >
-                Documento {index + 1}
-              </a>
+                document={doc}
+                className="text-sm"
+              />
             ))}
           </div>
         </div>
