@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Upload, X, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import { VariantsManager, ProductVariant } from './VariantsManager'
 
 interface Category {
   id: string
@@ -29,11 +30,13 @@ interface Product {
   categoryId: string
   active: boolean
   featured: boolean
+  allowIndividualSale: boolean
   category: {
     id: string
     name: string
     slug: string
   }
+  variants?: ProductVariant[]
 }
 
 interface EditProductFormProps {
@@ -48,6 +51,9 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
   const [imageUrls, setImageUrls] = useState<string[]>(
     product.images.length > 0 ? product.images : ['']
   )
+  const [variants, setVariants] = useState<ProductVariant[]>(
+    product.variants || []
+  )
   
   const [formData, setFormData] = useState({
     name: product.name,
@@ -57,6 +63,7 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
     categoryId: product.categoryId,
     active: product.active,
     featured: product.featured,
+    allowIndividualSale: product.allowIndividualSale,
   })
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -112,6 +119,7 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         images,
+        variants,
       }
 
       const response = await fetch(`/api/admin/products/${product.slug}`, {
@@ -342,6 +350,14 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
               )}
             </CardContent>
           </Card>
+
+          {/* Variants Manager */}
+          <VariantsManager
+            variants={variants}
+            onVariantsChange={setVariants}
+            productStock={parseInt(formData.stock) || 0}
+            productPrice={parseFloat(formData.price) || 0}
+          />
         </div>
 
         {/* Settings Sidebar */}
@@ -372,6 +388,18 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
                   id="featured"
                   checked={formData.featured}
                   onCheckedChange={(checked) => handleInputChange('featured', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="allowIndividualSale">Venta Individual</Label>
+                  <p className="text-sm text-gray-600">Permitir venta por unidad individual</p>
+                </div>
+                <Switch
+                  id="allowIndividualSale"
+                  checked={formData.allowIndividualSale}
+                  onCheckedChange={(checked) => handleInputChange('allowIndividualSale', checked)}
                 />
               </div>
             </CardContent>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getFlowPaymentStatus, convertFlowStatusToPaymentStatus, getFlowOrderStatus, validateFlowWebhookSignature } from '@/lib/flow'
+import { calculateRequiredUnits } from '@/lib/stock-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,7 +54,8 @@ export async function POST(request: NextRequest) {
           include: {
             items: {
               include: {
-                product: true
+                product: true,
+                productVariant: true
               }
             }
           }
@@ -105,16 +107,25 @@ export async function POST(request: NextRequest) {
       console.log('Payment approved, updating product stock...')
       
       for (const item of payment.order.items) {
+        // Calcular las unidades reales a reducir del stock
+        let unitsToReduce = item.quantity
+        
+        if (item.productVariantId && item.productVariant) {
+          // Para variantes, calcular unidades reales usando el helper
+          unitsToReduce = calculateRequiredUnits(item.quantity, item.productVariant.units)
+        }
+        // Para venta individual, item.quantity ya representa las unidades correctas
+        
         await prisma.product.update({
           where: { id: item.productId },
           data: {
             stock: {
-              decrement: item.quantity
+              decrement: unitsToReduce
             }
           }
         })
         
-        console.log(`Reduced stock for product ${item.product.name}: -${item.quantity}`)
+        console.log(`Stock reduced for product ${item.product.name}: ${unitsToReduce} units (${item.quantity} ${item.productVariantId ? 'packs' : 'units'})`)
       }
     }
 

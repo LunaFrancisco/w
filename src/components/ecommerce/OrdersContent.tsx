@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Package, MapPin, Calendar, CreditCard, ShoppingBag, Eye } from 'lucide-react'
+import { Package, MapPin, Calendar, CreditCard, ShoppingBag, Eye, Package2 } from 'lucide-react'
 import { OrderStatusSelect } from '@/components/orders/OrderStatusSelect'
 import { useSession } from 'next-auth/react'
 
@@ -13,12 +13,19 @@ interface OrderItem {
   quantity: number
   price: number
   total: number
+  productVariantId: string | null
   product: {
     id: string
     name: string
     slug: string
     images: string
   }
+  productVariant?: {
+    id: string
+    name: string
+    units: number
+    price: number
+  } | null
 }
 
 interface Order {
@@ -226,9 +233,28 @@ export function OrdersContent() {
                     >
                       {item.product.name}
                     </Link>
-                    <p className="text-sm text-gray-600">
-                      Cantidad: {item.quantity} × {formatPrice(item.price)}
-                    </p>
+                    
+                    {/* Variant Information */}
+                    {item.productVariantId && item.productVariant && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Package2 className="h-3 w-3 text-purple-600" />
+                        <span className="text-sm text-purple-600 font-medium">
+                          {item.productVariant.name} ({item.productVariant.units} unidades)
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="text-sm text-gray-600 mt-1">
+                      {item.productVariantId ? (
+                        <span>
+                          Cantidad: {item.quantity} packs ({item.quantity * (item.productVariant?.units || 1)} unidades) × {formatPrice(item.price)}
+                        </span>
+                      ) : (
+                        <span>
+                          Cantidad: {item.quantity} unidades × {formatPrice(item.price)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="text-right">

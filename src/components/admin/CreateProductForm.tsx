@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Upload, X } from 'lucide-react'
 import Link from 'next/link'
+import { VariantsManager, ProductVariant } from './VariantsManager'
 
 interface Category {
   id: string
@@ -27,6 +28,7 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [images, setImages] = useState<string[]>([])
   const [imageUrls, setImageUrls] = useState<string[]>([''])
+  const [variants, setVariants] = useState<ProductVariant[]>([])
   
   const [formData, setFormData] = useState({
     name: '',
@@ -36,6 +38,7 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
     categoryId: '',
     active: true,
     featured: false,
+    allowIndividualSale: true,
   })
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -92,6 +95,7 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         images: images.filter(url => url.trim() !== ''),
+        variants,
       }
 
       const response = await fetch('/api/admin/products', {
@@ -272,6 +276,14 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
               )}
             </CardContent>
           </Card>
+
+          {/* Variants Manager */}
+          <VariantsManager
+            variants={variants}
+            onVariantsChange={setVariants}
+            productStock={parseInt(formData.stock) || 0}
+            productPrice={parseFloat(formData.price) || 0}
+          />
         </div>
 
         {/* Settings Sidebar */}
@@ -302,6 +314,18 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
                   id="featured"
                   checked={formData.featured}
                   onCheckedChange={(checked) => handleInputChange('featured', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="allowIndividualSale">Venta Individual</Label>
+                  <p className="text-sm text-gray-600">Permitir venta por unidad individual</p>
+                </div>
+                <Switch
+                  id="allowIndividualSale"
+                  checked={formData.allowIndividualSale}
+                  onCheckedChange={(checked) => handleInputChange('allowIndividualSale', checked)}
                 />
               </div>
             </CardContent>

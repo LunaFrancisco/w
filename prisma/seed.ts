@@ -69,10 +69,6 @@ async function main() {
     data: {
       userId: pendingUser.id,
       status: AccessRequestStatus.PENDING,
-      phone: '+56979577880',
-      company: 'Tech Company',
-      position: 'Developer',
-      reason: 'I want to access premium products and exclusive offers available to Club W members.',
       documents: [
         {
           key: 'access-requests/example-cv.pdf',
@@ -97,10 +93,6 @@ async function main() {
     data: {
       userId: clientUser1.id,
       status: AccessRequestStatus.APPROVED,
-      phone: '+56987654321',
-      company: 'Design Studio',
-      position: 'UX Designer',
-      reason: 'I am a design professional looking for high-quality materials and exclusive access to premium products.',
       documents: [
         {
           key: 'access-requests/example-cv-maria.pdf',
@@ -175,8 +167,7 @@ async function main() {
     },
   })
 
-  // Create products
-  console.log('🛍️ Creating products...')
+  // Define products data
   const products = [
     // Electronics
     {
@@ -307,10 +298,78 @@ async function main() {
     },
   ]
 
+  // Create products and their variants
+  console.log('🛍️ Creating products with variants...')
+  
   for (const productData of products) {
-    await prisma.product.create({
+    const product = await prisma.product.create({
       data: productData,
     })
+    
+    // Add variants for some products (as examples)
+    if (product.slug === 'airpods-pro-3ra-generacion') {
+      // AirPods: Individual and Pack variants
+      await prisma.productVariant.create({
+        data: {
+          productId: product.id,
+          name: 'Pack de 2 unidades',
+          units: 2,
+          price: 550000, // Descuento por volumen
+          active: true,
+          isDefault: false,
+        }
+      })
+      
+      await prisma.productVariant.create({
+        data: {
+          productId: product.id,
+          name: 'Pack Familiar (3 unidades)',
+          units: 3,
+          price: 800000, // Mejor descuento
+          active: true,
+          isDefault: false,
+        }
+      })
+    }
+    
+    if (product.slug === 'nike-air-jordan-1-retro') {
+      // Jordan: Pack variants
+      await prisma.productVariant.create({
+        data: {
+          productId: product.id,
+          name: 'Pack de 2 pares',
+          units: 2,
+          price: 340000, // Descuento
+          active: true,
+          isDefault: false,
+        }
+      })
+    }
+    
+    if (product.slug === 'pesas-ajustables-bowflex') {
+      // Pesas: Different pack sizes
+      await prisma.productVariant.create({
+        data: {
+          productId: product.id,
+          name: 'Set Completo (2 pesas)',
+          units: 2,
+          price: 1200000, // Precio por set completo
+          active: true,
+          isDefault: true,
+        }
+      })
+      
+      await prisma.productVariant.create({
+        data: {
+          productId: product.id,
+          name: 'Set Gimnasio (4 pesas)',
+          units: 4,
+          price: 2200000, // Descuento por volumen
+          active: true,
+          isDefault: false,
+        }
+      })
+    }
   }
 
   // Create addresses for users

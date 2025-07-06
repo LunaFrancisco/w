@@ -42,6 +42,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               images: true, 
               slug: true 
             } 
+          },
+          productVariant: {
+            select: {
+              id: true,
+              name: true,
+              units: true,
+              price: true
+            }
           }
         }
       }
@@ -207,12 +215,32 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                         {item.product.name}
                       </Link>
                     </h3>
-                    <p className="text-sm text-gray-600">
-                      Cantidad: {item.quantity}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Precio unitario: ${Number(item.price).toLocaleString()}
-                    </p>
+                    
+                    {/* Variant Information */}
+                    {item.productVariantId && item.productVariant && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <svg className="h-3 w-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-sm text-purple-600 font-medium">
+                          {item.productVariant.name} ({item.productVariant.units} unidades)
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="text-sm text-gray-600 mt-1">
+                      {item.productVariantId ? (
+                        <>
+                          <p>Cantidad: {item.quantity} packs ({item.quantity * item.productVariant.units} unidades)</p>
+                          <p>Precio por pack: ${Number(item.price).toLocaleString()}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p>Cantidad: {item.quantity} unidades</p>
+                          <p>Precio unitario: ${Number(item.price).toLocaleString()}</p>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">

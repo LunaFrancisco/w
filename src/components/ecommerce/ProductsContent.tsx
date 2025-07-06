@@ -7,6 +7,15 @@ import { ProductFilters } from './ProductFilters'
 import { ProductSearch } from './ProductSearch'
 import { Pagination } from './Pagination'
 
+interface ProductVariant {
+  id: string
+  name: string
+  units: number
+  price: number
+  active: boolean
+  isDefault: boolean
+}
+
 interface Product {
   id: string
   name: string
@@ -21,6 +30,7 @@ interface Product {
     name: string
     slug: string
   }
+  variants?: ProductVariant[]
 }
 
 interface Category {

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Search, TrendingUp, Clock, CheckCircle, Truck, Package, XCircle, Eye, BarChart3, RefreshCw } from 'lucide-react'
+import { Search, TrendingUp, Clock, CheckCircle, Truck, Package, XCircle, Eye, BarChart3, RefreshCw, Package2 } from 'lucide-react'
 
 interface Order {
   id: string
@@ -33,10 +33,17 @@ interface Order {
     id: string
     quantity: number
     total: number
+    productVariantId: string | null
     product: {
       name: string
       images: string[]
     }
+    productVariant?: {
+      id: string
+      name: string
+      units: number
+      price: number
+    } | null
   }>
 }
 
@@ -466,7 +473,24 @@ function OrderCard({ order }: { order: Order }) {
                 )}
                 <div>
                   <p className="font-semibold text-sm text-gray-900">{item.product.name}</p>
-                  <p className="text-sm text-gray-600">Cantidad: <span className="font-medium">{item.quantity}</span></p>
+                  
+                  {/* Variant Information */}
+                  {item.productVariantId && item.productVariant && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Package2 className="h-3 w-3 text-purple-600" />
+                      <span className="text-xs text-purple-600 font-medium">
+                        {item.productVariant.name} ({item.productVariant.units} unid.)
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="text-sm text-gray-600 mt-1">
+                    {item.productVariantId ? (
+                      <span>Cantidad: <span className="font-medium">{item.quantity} packs ({item.quantity * (item.productVariant?.units || 1)} unidades)</span></span>
+                    ) : (
+                      <span>Cantidad: <span className="font-medium">{item.quantity} unidades</span></span>
+                    )}
+                  </div>
                 </div>
               </div>
               <p className="font-bold text-sm text-gray-900">${Number(item.total).toLocaleString('es-CL')}</p>

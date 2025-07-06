@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/hooks/useCart'
 import { Button } from '@/components/ui/button'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Package2 } from 'lucide-react'
 
 export function CartContent() {
   const { 
@@ -118,30 +118,57 @@ export function CartContent() {
                         {item.name}
                       </h3>
                     </Link>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Stock disponible: {item.stock}
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                      {formatPrice(item.price)}
-                    </p>
+                    
+                    {/* Variant Information */}
+                    {!item.isIndividual && item.variantName && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Package2 className="h-3 w-3 text-purple-600" />
+                        <span className="text-sm text-purple-600 font-medium">
+                          {item.variantName} ({item.units} unidades)
+                        </span>
+                      </div>
+                    )}
+                    
+                    {item.isIndividual && (
+                      <div className="text-sm text-gray-500 mt-1">
+                        Venta individual
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-sm text-gray-500">
+                        Stock disponible: {item.stock} {item.isIndividual ? 'unidades' : 'packs'}
+                      </p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formatPrice(item.price)}
+                        {!item.isIndividual && (
+                          <span className="text-xs text-gray-500 ml-1">/{item.units} unid.</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
 
                   {/* Quantity Controls */}
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
                       disabled={item.quantity <= 1}
                     >
                       <Minus className="w-4 h-4" />
                     </button>
                     
-                    <span className="w-12 text-center font-medium">
-                      {item.quantity}
-                    </span>
+                    <div className="w-16 text-center">
+                      <span className="font-medium">{item.quantity}</span>
+                      {!item.isIndividual && (
+                        <div className="text-xs text-gray-500">
+                          {item.quantity * item.units} unid.
+                        </div>
+                      )}
+                    </div>
                     
                     <button
-                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
                       disabled={item.quantity >= item.stock}
                     >
@@ -158,7 +185,7 @@ export function CartContent() {
 
                   {/* Remove Button */}
                   <button
-                    onClick={() => removeFromCart(item.productId)}
+                    onClick={() => removeFromCart(item.id)}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Eliminar producto"
                   >

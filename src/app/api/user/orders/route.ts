@@ -40,6 +40,14 @@ export async function GET(request: NextRequest) {
                 slug: true,
                 images: true
               }
+            },
+            productVariant: {
+              select: {
+                id: true,
+                name: true,
+                units: true,
+                active: true
+              }
             }
           }
         }
@@ -50,7 +58,33 @@ export async function GET(request: NextRequest) {
       ...(limit && { take: limit })
     })
 
-    return NextResponse.json(orders)
+    // Format orders to include variant information
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      total: Number(order.total),
+      items: order.items.map(item => ({
+        ...item,
+        price: Number(item.price),
+        total: Number(item.total),
+        displayName: item.productVariant 
+          ? `${item.product.name} - ${item.productVariant.name}`
+          : item.product.name,
+        isVariant: item.productVariantId !== null,
+        variantInfo: item.productVariant ? {
+          name: item.productVariant.name,
+          units: item.productVariant.units,
+          totalUnits: item.quantity * item.productVariant.units // Total units purchased
+        } : {
+          name: 'Unidad Individual',
+          units: 1,
+          totalUnits: item.quantity
+        }
+      }))
+    }))
+
+    return NextResponse.json(formattedOrders)
 
   } catch (error) {
     console.error('Error fetching user orders:', error)

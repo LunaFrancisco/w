@@ -3,8 +3,17 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Heart, Share2, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Zap, Package, Check, X, ShoppingBag, Eye, Users, Clock, Award, Gift } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Zap, Package, Check, X, ShoppingBag, Eye, Users, Clock, Award, Gift, Package2, Calculator } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
+
+interface ProductVariant {
+  id: string
+  name: string
+  units: number
+  price: number
+  active: boolean
+  isDefault: boolean
+}
 
 interface Product {
   id: string
@@ -15,11 +24,13 @@ interface Product {
   stock: number
   images: string[]
   featured: boolean
+  allowIndividualSale: boolean
   category: {
     id: string
     name: string
     slug: string
   }
+  variants?: ProductVariant[]
 }
 
 interface ProductDetailContentProps {
@@ -35,6 +46,13 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [addedToCart, setAddedToCart] = useState(false)
   const [viewCount, setViewCount] = useState(47)
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(() => {
+    if (!product.allowIndividualSale && product.variants && product.variants.length > 0) {
+      // Si no se permite venta individual, seleccionar la primera variante automáticamente
+      return product.variants.find(v => v.isDefault) || product.variants[0]
+    }
+    return product.variants?.find(v => v.isDefault) || null
+  })
   const { addToCart } = useCart()
 
   useEffect(() => {
@@ -57,7 +75,7 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
 
     setIsLoading(true)
     try {
-      await addToCart(product.slug, quantity)
+      await addToCart(product.slug, quantity, selectedVariant?.id)
       setAddedToCart(true)
       setTimeout(() => setAddedToCart(false), 3000)
     } catch (error) {
@@ -65,6 +83,23 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const getCurrentPrice = () => {
+    return selectedVariant ? selectedVariant.price : product.price
+  }
+
+  const getAvailableStock = () => {
+    if (!selectedVariant) return product.stock
+    return Math.floor(product.stock / selectedVariant.units)
+  }
+
+  const getSavingsInfo = () => {
+    if (!selectedVariant) return null
+    const individualTotal = product.price * selectedVariant.units
+    const savings = individualTotal - selectedVariant.price
+    const percentage = individualTotal > 0 ? (savings / individualTotal) * 100 : 0
+    return { savings, percentage }
   }
 
   const handleShare = async () => {
@@ -277,18 +312,91 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
               </div>
             </div>
 
+            {/* Format Selection */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-3xl p-6 space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Package2 className="h-5 w-5 text-purple-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">Selecciona el formato de compra</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* Individual option - Solo mostrar si se permite venta individual */}
+                  {product.allowIndividualSale && (
+                    <button
+                      onClick={() => setSelectedVariant(null)}
+                      className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left ${
+                        !selectedVariant
+                          ? 'border-blue-500 bg-blue-50 shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-semibold text-gray-900">Unidad Individual</div>
+                          <div className="text-sm text-gray-600">1 unidad</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xl font-bold text-gray-900">{formatPrice(product.price)}</div>
+                          <div className="text-sm text-gray-600">Stock: {product.stock}</div>
+                        </div>
+                      </div>
+                    </button>
+                  )}
+                  
+                  {/* Variant options */}
+                  {product.variants.filter(v => v.active).map((variant) => {
+                    const savings = getSavingsInfo()
+                    const isSelected = selectedVariant?.id === variant.id
+                    const availableStock = Math.floor(product.stock / variant.units)
+                    
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => setSelectedVariant(variant)}
+                        className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 text-left ${
+                          isSelected
+                            ? 'border-purple-500 bg-purple-50 shadow-lg'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-gray-900">{variant.name}</div>
+                            <div className="text-sm text-gray-600">{variant.units} unidades</div>
+                            {isSelected && savings && savings.savings > 0 && (
+                              <div className="flex items-center space-x-1 text-xs text-green-600 mt-1">
+                                <Calculator className="h-3 w-3" />
+                                <span>Ahorras {formatPrice(savings.savings)} ({savings.percentage.toFixed(1)}%)</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-gray-900">{formatPrice(variant.price)}</div>
+                            <div className="text-sm text-gray-600">Stock: {availableStock} packs</div>
+                            {variant.isDefault && (
+                              <div className="text-xs text-purple-600 font-medium">Recomendado</div>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Price Section with discount */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl p-6 space-y-3">
               <div className="flex items-baseline space-x-3">
                 <span className="text-4xl lg:text-5xl font-black text-gray-900">
-                  {formatPrice(product.price)}
+                  {formatPrice(getCurrentPrice())}
                 </span>
-                <span className="text-xl text-gray-400 line-through">
-                  {formatPrice(product.price * 1.2)}
-                </span>
-                <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full animate-bounce">
-                  -20%
-                </span>
+                {selectedVariant && (
+                  <div className="text-sm text-gray-600">
+                    por {selectedVariant.units} unidades
+                  </div>
+                )}
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Award className="h-4 w-4 text-purple-600" />
@@ -304,7 +412,7 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  {product.stock > 0 ? (
+                  {getAvailableStock() > 0 ? (
                     <>
                       <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                       <span className="text-green-700 font-semibold">En stock</span>
@@ -316,17 +424,20 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
                     </>
                   )}
                 </div>
-                {product.stock > 0 && (
+                {getAvailableStock() > 0 && (
                   <span className="text-sm text-gray-600">
-                    {product.stock} disponibles
+                    {selectedVariant 
+                      ? `${getAvailableStock()} packs disponibles`
+                      : `${product.stock} unidades disponibles`
+                    }
                   </span>
                 )}
               </div>
-              {product.stock > 0 && product.stock < 50 && (
+              {getAvailableStock() > 0 && getAvailableStock() < 50 && (
                 <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${(product.stock / 50) * 100}%` }}
+                    style={{ width: `${(getAvailableStock() / 50) * 100}%` }}
                   />
                 </div>
               )}
@@ -340,11 +451,11 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
             </div>
 
             {/* Quantity Selector with modern design */}
-            {product.stock > 0 && (
+            {getAvailableStock() > 0 && (
               <div className="space-y-3">
                 <label className="block text-sm font-semibold text-gray-700 flex items-center space-x-2">
                   <ShoppingBag className="h-4 w-4" />
-                  <span>Cantidad</span>
+                  <span>Cantidad{selectedVariant ? ` (${selectedVariant.units} unidades por pack)` : ''}</span>
                 </label>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center bg-gray-100 rounded-2xl p-1">
@@ -356,15 +467,20 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
                     </button>
                     <span className="w-16 text-center font-bold text-xl">{quantity}</span>
                     <button
-                      onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                      onClick={() => setQuantity(Math.min(getAvailableStock(), quantity + 1))}
                       className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white transition-all duration-300 text-xl font-semibold hover:shadow-md"
                     >
                       +
                     </button>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    Total: {formatPrice(product.price * quantity)}
-                  </span>
+                  <div className="text-sm text-gray-500">
+                    <div>Total: {formatPrice(getCurrentPrice() * quantity)}</div>
+                    {selectedVariant && (
+                      <div className="text-xs">
+                        {quantity * selectedVariant.units} unidades en total
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -373,15 +489,15 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
             <div className="space-y-4">
               <button
                 onClick={handleAddToCart}
-                disabled={product.stock === 0 || isLoading}
+                disabled={getAvailableStock() === 0 || isLoading}
                 className={`relative w-full py-5 px-8 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-xl overflow-hidden group ${
-                  product.stock === 0
+                  getAvailableStock() === 0
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white hover:shadow-2xl'
                 } ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
                 {/* Animated background */}
-                {product.stock > 0 && !isLoading && (
+                {getAvailableStock() > 0 && !isLoading && (
                   <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 )}
                 
@@ -391,7 +507,7 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current mr-3"></div>
                       Agregando al carrito...
                     </>
-                  ) : product.stock === 0 ? (
+                  ) : getAvailableStock() === 0 ? (
                     <>
                       <X className="h-5 w-5 mr-2" />
                       Producto Agotado

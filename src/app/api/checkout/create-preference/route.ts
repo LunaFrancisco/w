@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createPaymentPreference } from '@/lib/mercadopago'
+import { validateStockAvailability, calculateRequiredUnits } from '@/lib/stock-utils'
 import { z } from 'zod'
 
 const createPreferenceSchema = z.object({
   items: z.array(z.object({
     productId: z.string(),
+    productVariantId: z.string().optional().nullable(), // null para venta individual
     name: z.string(),
     quantity: z.number().positive(),
     price: z.number().positive()
@@ -38,14 +40,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Dirección no válida' }, { status: 400 })
     }
 
-    // Verificar productos y stock
+    // Verificar productos y variantes
     const productIds = validatedData.items.map(item => item.productId)
-    const products = await prisma.product.findMany({
-      where: {
-        id: { in: productIds },
-        active: true
-      }
-    })
+    const variantIds = validatedData.items
+      .filter(item => item.productVariantId)
+      .map(item => item.productVariantId!)
+    
+    const [products, variants] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          id: { in: productIds },
+          active: true
+        }
+      }),
+      variantIds.length > 0 ? prisma.productVariant.findMany({
+        where: {
+          id: { in: variantIds },
+          active: true
+        }
+      }) : []
+    ])
 
     if (products.length !== validatedData.items.length) {
       return NextResponse.json({ error: 'Algunos productos no están disponibles' }, { status: 400 })
@@ -61,17 +75,41 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Producto ${item.name} no encontrado` }, { status: 400 })
       }
 
-      if (product.stock < item.quantity) {
-        return NextResponse.json({ error: `Stock insuficiente para ${product.name}` }, { status: 400 })
+      let variant = null
+      let units = 1 // Para venta individual
+      let itemPrice = Number(product.price) // Precio base para venta individual
+
+      // Si es una variante, validar y obtener información
+      if (item.productVariantId) {
+        variant = variants.find(v => v.id === item.productVariantId)
+        if (!variant) {
+          return NextResponse.json({ error: `Variante no encontrada para ${product.name}` }, { status: 400 })
+        }
+        if (variant.productId !== product.id) {
+          return NextResponse.json({ error: `Variante no corresponde al producto ${product.name}` }, { status: 400 })
+        }
+        units = variant.units
+        itemPrice = Number(variant.price)
       }
 
-      const itemTotal = Number(product.price) * item.quantity
+      // Validar stock usando las utilidades de stock
+      const isStockValid = validateStockAvailability(product.stock, item.quantity, units)
+      if (!isStockValid) {
+        const requiredUnits = calculateRequiredUnits(item.quantity, units)
+        const variantText = variant ? ` (${variant.name})` : ' (individual)'
+        return NextResponse.json({ 
+          error: `Stock insuficiente para ${product.name}${variantText}. Necesitas ${requiredUnits} unidades, disponibles: ${product.stock}` 
+        }, { status: 400 })
+      }
+
+      const itemTotal = itemPrice * item.quantity
       subtotal += itemTotal
 
       orderItems.push({
         productId: product.id,
+        productVariantId: item.productVariantId || null,
         quantity: item.quantity,
-        price: product.price,
+        price: itemPrice,
         total: itemTotal
       })
     }
@@ -104,14 +142,22 @@ export async function POST(request: NextRequest) {
     })
 
     // Preparar items para MercadoPago
-    const mpItems = order.items.map(item => ({
-      id: item.product.id,
-      title: item.product.name,
-      description: item.product.description,
-      quantity: item.quantity,
-      unit_price: Number(item.price),
-      currency_id: 'CLP'
-    }))
+    const mpItems = order.items.map(item => {
+      const isVariant = item.productVariantId !== null
+      const variantInfo = isVariant ? variants.find(v => v.id === item.productVariantId) : null
+      const title = isVariant && variantInfo 
+        ? `${item.product.name} - ${variantInfo.name}`
+        : item.product.name
+      
+      return {
+        id: isVariant ? item.productVariantId : item.product.id,
+        title: title,
+        description: item.product.description,
+        quantity: item.quantity,
+        unit_price: Number(item.price),
+        currency_id: 'CLP'
+      }
+    })
 
     // Agregar envío como item si tiene costo
     if (validatedData.shippingCost > 0) {

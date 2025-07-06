@@ -42,7 +42,8 @@ export async function PUT(request: NextRequest) {
         user: { select: { name: true, email: true } },
         items: {
           include: {
-            product: { select: { name: true } }
+            product: { select: { name: true } },
+            productVariant: { select: { name: true, units: true } }
           }
         }
       }
@@ -92,7 +93,8 @@ export async function GET(request: NextRequest) {
           address: true,
           items: {
             include: {
-              product: { select: { name: true, images: true } }
+              product: { select: { name: true, images: true } },
+              productVariant: { select: { name: true, units: true } }
             }
           }
         },
@@ -121,8 +123,34 @@ export async function GET(request: NextRequest) {
         .reduce((sum, order) => sum + Number(order.total), 0)
     }
 
+    // Format orders to include variant information
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      total: Number(order.total),
+      items: order.items.map(item => ({
+        ...item,
+        price: Number(item.price),
+        total: Number(item.total),
+        displayName: item.productVariant 
+          ? `${item.product.name} - ${item.productVariant.name}`
+          : item.product.name,
+        isVariant: item.productVariantId !== null,
+        variantInfo: item.productVariant ? {
+          name: item.productVariant.name,
+          units: item.productVariant.units,
+          totalUnits: item.quantity * item.productVariant.units
+        } : {
+          name: 'Unidad Individual',
+          units: 1,
+          totalUnits: item.quantity
+        }
+      }))
+    }))
+
     return NextResponse.json({
-      orders,
+      orders: formattedOrders,
       stats,
       pagination: {
         page,
