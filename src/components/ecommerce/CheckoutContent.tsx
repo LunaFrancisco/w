@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/hooks/useCart'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, CreditCard, MapPin } from 'lucide-react'
+import { ArrowLeft, CreditCard, MapPin, Package2 } from 'lucide-react'
 import Link from 'next/link'
 
 interface Address {
@@ -200,12 +200,36 @@ export function CheckoutContent() {
             
             <div className="space-y-3">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                  <div>
+                <div key={item.id} className="flex justify-between items-start py-3 border-b border-gray-100 last:border-b-0">
+                  <div className="flex-1">
                     <p className="font-medium text-gray-900">{item.name}</p>
-                    <p className="text-sm text-gray-600">Cantidad: {item.quantity}</p>
+                    
+                    {/* Variant Information */}
+                    {!item.isIndividual && item.variantName && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Package2 className="h-3 w-3 text-purple-600" />
+                        <span className="text-sm text-purple-600 font-medium">
+                          {item.variantName} ({item.units} unidades)
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between mt-1">
+                      <div className="text-sm text-gray-600">
+                        {item.isIndividual ? (
+                          <span>Cantidad: {item.quantity} unidades</span>
+                        ) : (
+                          <span>Cantidad: {item.quantity} packs ({item.quantity * item.units} unidades)</span>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {formatPrice(item.price)} {!item.isIndividual && `× ${item.quantity}`}
+                      </div>
+                    </div>
                   </div>
-                  <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
+                  <div className="text-right ml-4">
+                    <p className="font-semibold text-gray-900">{formatPrice(item.price * item.quantity)}</p>
+                  </div>
                 </div>
               ))}
             </div>

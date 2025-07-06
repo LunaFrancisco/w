@@ -27,6 +27,15 @@ async function getProduct(slug: string) {
             slug: true,
           },
         },
+        variants: {
+          where: {
+            active: true,
+          },
+          orderBy: [
+            { isDefault: 'desc' },
+            { units: 'asc' },
+          ],
+        },
       },
     })
 
@@ -40,6 +49,10 @@ async function getProduct(slug: string) {
       images: Array.isArray(product.images) 
         ? product.images.filter((img): img is string => typeof img === 'string')
         : [],
+      variants: product.variants.map(variant => ({
+        ...variant,
+        price: Number(variant.price),
+      })),
     }
   } catch (error) {
     console.error('Error fetching product:', error)

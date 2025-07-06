@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
 import { prisma } from '@/lib/prisma'
 import { getPaymentStatus, getOrderStatus, validateWebhookSignature } from '@/lib/mercadopago'
+import { calculateRequiredUnits } from '@/lib/stock-utils'
 
 if (!process.env.MP_ACCESS_TOKEN) {
   throw new Error('MP_ACCESS_TOKEN environment variable is required')
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest) {
         payments: true,
         items: {
           include: {
-            product: true
+            product: true,
+            productVariant: true
           }
         }
       }
@@ -142,14 +144,25 @@ export async function POST(request: NextRequest) {
     // Si el pago fue aprobado, reducir el stock de los productos
     if (paymentStatus === 'APPROVED' && order.status === 'PENDING') {
       for (const item of order.items) {
+        // Calcular las unidades reales a reducir del stock
+        let unitsToReduce = item.quantity
+        
+        if (item.productVariantId && item.productVariant) {
+          // Para variantes, calcular unidades reales usando el helper
+          unitsToReduce = calculateRequiredUnits(item.quantity, item.productVariant.units)
+        }
+        // Para venta individual, item.quantity ya representa las unidades correctas
+        
         await prisma.product.update({
           where: { id: item.productId },
           data: {
             stock: {
-              decrement: item.quantity
+              decrement: unitsToReduce
             }
           }
         })
+        
+        console.log(`Stock reduced for product ${item.productId}: ${unitsToReduce} units (${item.quantity} ${item.productVariantId ? 'packs' : 'units'})`)
       }
     }
 

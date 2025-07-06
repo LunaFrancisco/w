@@ -12,7 +12,7 @@ import {
   SheetTitle,
   SheetFooter,
 } from '@/components/ui/sheet'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Package2 } from 'lucide-react'
 
 interface CartDrawerProps {
   open: boolean
@@ -127,26 +127,45 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         {item.name}
                       </h4>
                     </Link>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {formatPrice(item.price)}
-                    </p>
+                    
+                    {/* Variant Information */}
+                    {!item.isIndividual && item.variantName && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Package2 className="h-3 w-3 text-purple-600" />
+                        <span className="text-xs text-purple-600 font-medium">
+                          {item.variantName}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-500 mt-1">
+                      <span>{formatPrice(item.price)}</span>
+                      {!item.isIndividual && (
+                        <span className="text-xs">x{item.units} unid.</span>
+                      )}
+                    </div>
                     
                     {/* Quantity Controls */}
                     <div className="flex items-center space-x-2 mt-2">
                       <button
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 text-xs"
                         disabled={item.quantity <= 1}
                       >
                         <Minus className="w-3 h-3" />
                       </button>
                       
-                      <span className="w-8 text-center text-sm font-medium">
-                        {item.quantity}
-                      </span>
+                      <div className="w-10 text-center text-sm">
+                        <span className="font-medium">{item.quantity}</span>
+                        {!item.isIndividual && (
+                          <div className="text-xs text-gray-500 leading-none">
+                            {item.quantity * item.units}u
+                          </div>
+                        )}
+                      </div>
                       
                       <button
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 text-xs"
                         disabled={item.quantity >= item.stock}
                       >
@@ -154,7 +173,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                       </button>
 
                       <button
-                        onClick={() => removeFromCart(item.productId)}
+                        onClick={() => removeFromCart(item.id)}
                         className="text-red-600 hover:text-red-700 p-1 ml-2"
                         title="Eliminar producto"
                       >

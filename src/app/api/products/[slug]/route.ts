@@ -30,6 +30,10 @@ export async function GET(
             slug: true,
           },
         },
+        variants: {
+          where: { active: true },
+          orderBy: { units: 'asc' }
+        }
       },
     })
 
@@ -40,9 +44,28 @@ export async function GET(
       )
     }
 
+    // Calculate price range and stock information
+    const allPrices = [
+      Number(product.price), // Base price for individual sale
+      ...product.variants.map(v => Number(v.price))
+    ]
+    const minPrice = Math.min(...allPrices)
+    const maxPrice = Math.max(...allPrices)
+
     return NextResponse.json({
       ...product,
-      price: Number(product.price),
+      price: Number(product.price), // Base price for individual
+      priceRange: {
+        min: minPrice,
+        max: maxPrice,
+        hasVariants: product.variants.length > 0
+      },
+      variants: product.variants.map(variant => ({
+        ...variant,
+        price: Number(variant.price),
+        availableStock: Math.floor(product.stock / variant.units)
+      })),
+      individualStock: product.stock, // Stock available for individual purchase
       images: Array.isArray(product.images) 
         ? product.images.filter((img): img is string => typeof img === 'string')
         : [],

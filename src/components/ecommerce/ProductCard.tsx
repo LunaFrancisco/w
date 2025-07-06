@@ -4,6 +4,16 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useCart } from '@/hooks/useCart'
+import { Package2 } from 'lucide-react'
+
+interface ProductVariant {
+  id: string
+  name: string
+  units: number
+  price: number
+  active: boolean
+  isDefault: boolean
+}
 
 interface Product {
   id: string
@@ -14,11 +24,13 @@ interface Product {
   stock: number
   images: string
   featured: boolean
+  allowIndividualSale: boolean
   category: {
     id: string
     name: string
     slug: string
   }
+  variants?: ProductVariant[]
 }
 
 interface ProductCardProps {
@@ -43,6 +55,12 @@ export function ProductCard({ product }: ProductCardProps) {
     
     if (product.stock === 0) return
 
+    // Si no se permite venta individual O hay variantes, redirigir a la página del producto
+    if (!product.allowIndividualSale || (product.variants && product.variants.length > 0)) {
+      window.location.href = `/productos/${product.slug}`
+      return
+    }
+
     setIsLoading(true)
     try {
       await addToCart(product.slug, 1)
@@ -51,6 +69,43 @@ export function ProductCard({ product }: ProductCardProps) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const getPriceRange = () => {
+    // Si no hay variantes, mostrar precio base (solo si se permite venta individual)
+    if (!product.variants || product.variants.length === 0) {
+      return formatPrice(product.price)
+    }
+
+    const activeVariants = product.variants.filter(v => v.active)
+    
+    // Si no se permite venta individual, solo considerar precios de variantes
+    if (!product.allowIndividualSale) {
+      if (activeVariants.length === 0) {
+        return formatPrice(product.price) // fallback
+      }
+      
+      const variantPrices = activeVariants.map(v => v.price)
+      const minPrice = Math.min(...variantPrices)
+      const maxPrice = Math.max(...variantPrices)
+      
+      if (minPrice === maxPrice) {
+        return formatPrice(minPrice)
+      }
+      
+      return `Desde ${formatPrice(minPrice)}`
+    }
+
+    // Si se permite venta individual, incluir precio base + variantes
+    const allPrices = [product.price, ...activeVariants.map(v => v.price)]
+    const minPrice = Math.min(...allPrices)
+    const maxPrice = Math.max(...allPrices)
+
+    if (minPrice === maxPrice) {
+      return formatPrice(minPrice)
+    }
+
+    return `Desde ${formatPrice(minPrice)}`
   }
 
   return (
@@ -95,9 +150,17 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Product Info */}
         <div className="p-4">
-          {/* Category */}
-          <div className="text-xs text-blue-600 font-medium mb-1 uppercase tracking-wide">
-            {product.category.name}
+          {/* Category and Variants indicator */}
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-xs text-blue-600 font-medium uppercase tracking-wide">
+              {product.category.name}
+            </div>
+            {product.variants && product.variants.length > 0 && (
+              <div className="flex items-center gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                <Package2 className="h-3 w-3" />
+                Múltiples formatos
+              </div>
+            )}
           </div>
 
           {/* Product Name */}
@@ -113,7 +176,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Price and Stock */}
           <div className="flex items-center justify-between mb-3">
             <div className="text-lg font-bold text-gray-900">
-              {formatPrice(product.price)}
+              {getPriceRange()}
             </div>
             <div className="text-sm text-gray-500">
               Stock: {product.stock}
@@ -137,6 +200,8 @@ export function ProductCard({ product }: ProductCardProps) {
               </div>
             ) : product.stock === 0 ? (
               'Producto Agotado'
+            ) : !product.allowIndividualSale || (product.variants && product.variants.length > 0) ? (
+              'Ver Opciones'
             ) : (
               'Agregar al Carrito'
             )}

@@ -90,6 +90,10 @@ export async function GET(request: NextRequest) {
               name: true,
               slug: true,
             }
+          },
+          variants: {
+            where: { active: true },
+            orderBy: { units: 'asc' }
           }
         },
         orderBy,
@@ -102,13 +106,33 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(totalCount / limit)
 
     return NextResponse.json({
-      products: products.map(product => ({
-        ...product,
-        price: Number(product.price),
-        images: Array.isArray(product.images) 
-          ? product.images.filter((img): img is string => typeof img === 'string')
-          : [],
-      })),
+      products: products.map(product => {
+        // Calculate price range including base price and variants
+        const allPrices = [
+          Number(product.price), // Base price for individual sale
+          ...product.variants.map(v => Number(v.price))
+        ]
+        const minPrice = Math.min(...allPrices)
+        const maxPrice = Math.max(...allPrices)
+        
+        return {
+          ...product,
+          price: Number(product.price), // Base price for individual
+          priceRange: {
+            min: minPrice,
+            max: maxPrice,
+            hasVariants: product.variants.length > 0
+          },
+          variants: product.variants.map(variant => ({
+            ...variant,
+            price: Number(variant.price),
+            availableStock: Math.floor(product.stock / variant.units)
+          })),
+          images: Array.isArray(product.images) 
+            ? product.images.filter((img): img is string => typeof img === 'string')
+            : [],
+        }
+      }),
       totalPages,
       currentPage: page,
       totalCount,

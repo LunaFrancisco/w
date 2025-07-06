@@ -27,6 +27,11 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           slug: true,
         },
       },
+      variants: {
+        orderBy: {
+          units: 'asc'
+        }
+      },
     },
   })
 
@@ -55,6 +60,11 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           images: Array.isArray(product.images) 
             ? product.images.filter((img): img is string => typeof img === 'string')
             : [],
+          variants: product.variants?.map(variant => ({
+            ...variant,
+            price: Number(variant.price)
+          })) || [],
+          allowIndividualSale: product.allowIndividualSale ?? true,
         }} 
         categories={categories} 
       />

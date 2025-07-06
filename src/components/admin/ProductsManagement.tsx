@@ -22,8 +22,19 @@ import {
   Package,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Package2,
+  Calculator
 } from 'lucide-react'
+
+interface ProductVariant {
+  id: string
+  name: string
+  units: number
+  price: number
+  active: boolean
+  isDefault: boolean
+}
 
 interface Product {
   id: string
@@ -40,6 +51,10 @@ interface Product {
   updatedAt: Date
   category: {
     name: string
+  }
+  variants?: ProductVariant[]
+  _count?: {
+    variants: number
   }
 }
 
@@ -368,7 +383,15 @@ function ProductGridCard({ product, formatPrice }: { product: Product, formatPri
             <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
               {product.name}
             </h3>
-            <p className="text-sm text-blue-600 font-medium">{product.category.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-blue-600 font-medium">{product.category.name}</p>
+              {product.variants && product.variants.length > 0 && (
+                <div className="flex items-center gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                  <Package2 className="h-3 w-3" />
+                  {product.variants.length} variante{product.variants.length !== 1 ? 's' : ''}
+                </div>
+              )}
+            </div>
           </div>
           
           <p className="text-sm text-gray-600 line-clamp-2">
@@ -377,10 +400,22 @@ function ProductGridCard({ product, formatPrice }: { product: Product, formatPri
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatPrice(Number(product.price))}
-              </p>
-              <p className="text-sm text-gray-500">Stock: {product.stock}</p>
+              {product.variants && product.variants.length > 0 ? (
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Precio desde:</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatPrice(Math.min(Number(product.price), ...product.variants.map(v => Number(v.price))))}
+                  </p>
+                  <p className="text-sm text-gray-500">Stock: {product.stock}</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatPrice(Number(product.price))}
+                  </p>
+                  <p className="text-sm text-gray-500">Stock: {product.stock}</p>
+                </div>
+              )}
             </div>
           </div>
           
@@ -468,11 +503,19 @@ function ProductTableRow({ product, formatPrice }: { product: Product, formatPri
         <div className="space-y-1">
           <div className="font-medium text-gray-900 line-clamp-1">{product.name}</div>
           <div className="text-sm text-gray-500 line-clamp-1">{product.description}</div>
-          {product.featured && (
-            <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
-              ⭐ Destacado
-            </Badge>
-          )}
+          <div className="flex items-center gap-2 mt-2">
+            {product.featured && (
+              <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
+                ⭐ Destacado
+              </Badge>
+            )}
+            {product.variants && product.variants.length > 0 && (
+              <Badge variant="outline" className="text-purple-600 border-purple-200 text-xs">
+                <Package2 className="h-3 w-3 mr-1" />
+                {product.variants.length} variante{product.variants.length !== 1 ? 's' : ''}
+              </Badge>
+            )}
+          </div>
         </div>
       </TableCell>
       <TableCell>
@@ -481,9 +524,18 @@ function ProductTableRow({ product, formatPrice }: { product: Product, formatPri
         </Badge>
       </TableCell>
       <TableCell>
-        <div className="font-semibold text-gray-900">
-          {formatPrice(Number(product.price))}
-        </div>
+        {product.variants && product.variants.length > 0 ? (
+          <div>
+            <div className="font-semibold text-gray-900">
+              {formatPrice(Math.min(Number(product.price), ...product.variants.map(v => Number(v.price))))}
+            </div>
+            <div className="text-xs text-gray-500">desde</div>
+          </div>
+        ) : (
+          <div className="font-semibold text-gray-900">
+            {formatPrice(Number(product.price))}
+          </div>
+        )}
       </TableCell>
       <TableCell>
         <div className="space-y-1">

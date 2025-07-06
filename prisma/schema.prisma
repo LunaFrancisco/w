@@ -8,22 +8,20 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  name          String?
-  image         String?
-  role          UserRole  @default(PENDING)
-  emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relations
-  accounts          Account[]
-  sessions          Session[]
+  id                String          @id @default(uuid())
+  email             String          @unique
+  name              String?
+  image             String?
+  role              UserRole        @default(PENDING)
+  emailVerified     DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  processedRequests AccessRequest[] @relation("ProcessedBy")
   accessRequest     AccessRequest?
+  accounts          Account[]
   addresses         Address[]
   orders            Order[]
-  processedRequests AccessRequest[] @relation("ProcessedBy")
+  sessions          Session[]
 
   @@map("users")
 }
@@ -34,15 +32,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -53,8 +50,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
 }
@@ -72,19 +68,13 @@ model AccessRequest {
   id          String              @id @default(uuid())
   userId      String              @unique
   status      AccessRequestStatus @default(PENDING)
-  documents   Json[]              // Only document URLs
-  phone       String
-  company     String?
-  position    String?
-  reason      String
+  documents   Json[]
   adminNotes  String?
   createdAt   DateTime            @default(now())
   processedAt DateTime?
   processedBy String?
-
-  // Relations
-  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  processor User? @relation("ProcessedBy", fields: [processedBy], references: [id])
+  processor   User?               @relation("ProcessedBy", fields: [processedBy], references: [id])
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("access_requests")
 }
@@ -102,10 +92,8 @@ model Address {
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders Order[]
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
 
   @@map("addresses")
 }
@@ -121,105 +109,112 @@ model ShippingZone {
 }
 
 model Category {
-  id          String  @id @default(uuid())
+  id          String    @id @default(uuid())
   name        String
-  slug        String  @unique
+  slug        String    @unique
   description String?
   image       String?
-  active      Boolean @default(true)
-
-  // Relations
-  products Product[]
+  active      Boolean   @default(true)
+  products    Product[]
 
   @@map("categories")
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int
-  images      Json[]
-  categoryId  String
-  active      Boolean  @default(true)
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  category   Category    @relation(fields: [categoryId], references: [id])
-  orderItems OrderItem[]
+  id                  String           @id @default(uuid())
+  name                String
+  slug                String           @unique
+  description         String
+  price               Decimal          @db.Decimal(10, 2)
+  stock               Int
+  images              Json[]
+  categoryId          String
+  active              Boolean          @default(true)
+  featured            Boolean          @default(false)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  allowIndividualSale Boolean          @default(true)
+  orderItems          OrderItem[]
+  variants            ProductVariant[]
+  category            Category         @relation(fields: [categoryId], references: [id])
 
   @@map("products")
 }
 
-model Order {
-  id             String        @id @default(uuid())
-  userId         String
-  addressId      String
-  status         OrderStatus   @default(PENDING)
-  subtotal       Decimal       @db.Decimal(10, 2)
-  shippingCost   Decimal       @db.Decimal(10, 2)
-  total          Decimal       @db.Decimal(10, 2)
-  preferenceId   String?
-  paymentStatus  PaymentStatus @default(PENDING)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+model ProductVariant {
+  id         String      @id @default(uuid())
+  productId  String
+  name       String
+  units      Int
+  price      Decimal     @db.Decimal(10, 2)
+  active     Boolean     @default(true)
+  isDefault  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  orderItems OrderItem[]
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  // Relations
-  user     User        @relation(fields: [userId], references: [id])
-  address  Address     @relation(fields: [addressId], references: [id])
-  items    OrderItem[]
-  payments Payment[]
+  @@map("product_variants")
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  userId        String
+  addressId     String
+  status        OrderStatus   @default(PENDING)
+  subtotal      Decimal       @db.Decimal(10, 2)
+  shippingCost  Decimal       @db.Decimal(10, 2)
+  total         Decimal       @db.Decimal(10, 2)
+  preferenceId  String?
+  paymentStatus PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         OrderItem[]
+  address       Address       @relation(fields: [addressId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  payments      Payment[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id        String  @id @default(uuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Decimal @db.Decimal(10, 2)
-  total     Decimal @db.Decimal(10, 2)
-
-  // Relations
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  id               String          @id @default(uuid())
+  orderId          String
+  productId        String
+  quantity         Int
+  price            Decimal         @db.Decimal(10, 2)
+  total            Decimal         @db.Decimal(10, 2)
+  productVariantId String?
+  order            Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product          Product         @relation(fields: [productId], references: [id])
+  productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
 
   @@map("order_items")
 }
 
 model Payment {
-  id                String        @id @default(uuid())
+  id                String         @id @default(uuid())
   orderId           String
-  // MercadoPago fields
-  mercadopagoId     String?       @unique
+  mercadopagoId     String?        @unique
   preferenceId      String?
   collector_id      String?
-  // Flow.cl fields
-  flowToken         String?       @unique
+  flowToken         String?        @unique
   flowOrderId       String?
   flowStatus        Int?
-  // Common fields
   paymentGateway    PaymentGateway @default(MERCADOPAGO)
-  status            PaymentStatus @default(PENDING)
+  status            PaymentStatus  @default(PENDING)
   statusDetail      String?
   paymentType       String?
   paymentMethod     String?
-  amount            Decimal       @db.Decimal(10, 2)
-  transactionAmount Decimal?      @db.Decimal(10, 2)
-  currency          String        @default("CLP")
+  amount            Decimal        @db.Decimal(10, 2)
+  transactionAmount Decimal?       @db.Decimal(10, 2)
+  currency          String         @default("CLP")
   dateCreated       DateTime?
   dateApproved      DateTime?
   externalReference String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  // Relations
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("payments")
 }
