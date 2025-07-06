@@ -115,7 +115,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
-    const where = status ? { status } : {}
+    const where = status && ['PENDING', 'APPROVED', 'REJECTED'].includes(status) 
+      ? { status: status as 'PENDING' | 'APPROVED' | 'REJECTED' } 
+      : {}
 
     // Execute with retry logic and timeout
     const executeWithRetry = async (query: () => Promise<any>, maxRetries = 2) => {
