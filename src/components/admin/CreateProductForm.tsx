@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, Upload, X } from 'lucide-react'
+import { ArrowLeft, Upload, X, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { VariantsManager, ProductVariant } from './VariantsManager'
+import { CreateCategoryForm } from './CreateCategoryForm'
 
 interface Category {
   id: string
@@ -29,6 +30,8 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
   const [images, setImages] = useState<string[]>([])
   const [imageUrls, setImageUrls] = useState<string[]>([''])
   const [variants, setVariants] = useState<ProductVariant[]>([])
+  const [availableCategories, setAvailableCategories] = useState<Category[]>(categories)
+  const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -124,6 +127,14 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
     }
   }
 
+  const handleCategoryCreated = (newCategory: Category) => {
+    setAvailableCategories(prev => [...prev, newCategory])
+    setFormData(prev => ({
+      ...prev,
+      categoryId: newCategory.id
+    }))
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex items-center space-x-4">
@@ -195,13 +206,25 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
               </div>
 
               <div>
-                <Label htmlFor="category">Categoría *</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="category">Categoría *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsCategoryFormOpen(true)}
+                    className="h-8"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Nueva
+                  </Button>
+                </div>
                 <Select value={formData.categoryId} onValueChange={(value) => handleInputChange('categoryId', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
+                    {availableCategories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
                       </SelectItem>
@@ -373,6 +396,12 @@ export function CreateProductForm({ categories }: CreateProductFormProps) {
           </div>
         </div>
       </div>
+      
+      <CreateCategoryForm
+        isOpen={isCategoryFormOpen}
+        onClose={() => setIsCategoryFormOpen(false)}
+        onSuccess={handleCategoryCreated}
+      />
     </form>
   )
 }

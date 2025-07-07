@@ -115,6 +115,7 @@ model Category {
   description String?
   image       String?
   active      Boolean   @default(true)
+  showInHome  Boolean   @default(false)
   products    Product[]
 
   @@map("categories")

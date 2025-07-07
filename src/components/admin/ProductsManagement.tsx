@@ -26,6 +26,7 @@ import {
   Package2,
   Calculator
 } from 'lucide-react'
+import { CreateCategoryButton } from './CreateCategoryButton'
 
 interface ProductVariant {
   id: string
@@ -173,13 +174,18 @@ export function ProductsManagement({ products, categories, productStats }: Produ
       {/* Categories Overview */}
       <Card className="border-0 shadow-lg">
         <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Categorías
-          </CardTitle>
-          <CardDescription>
-            Distribución de productos por categoría
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Categorías
+              </CardTitle>
+              <CardDescription>
+                Distribución de productos por categoría
+              </CardDescription>
+            </div>
+            <CreateCategoryButton />
+          </div>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">

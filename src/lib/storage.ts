@@ -129,6 +129,7 @@ export function formatFileSize(bytes: number): string {
 export const STORAGE_PREFIXES = {
   ACCESS_REQUESTS: 'access-requests',
   PRODUCT_IMAGES: 'product-images',
+  CATEGORY_IMAGES: 'category-images',
   USER_AVATARS: 'user-avatars',
 } as const;
 

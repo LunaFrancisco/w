@@ -87,7 +87,7 @@ export function ProductsContent() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories')
+      const response = await fetch('/api/categories?hideEmpty=true')
       if (!response.ok) throw new Error('Error al cargar categorías')
       
       const data = await response.json()
