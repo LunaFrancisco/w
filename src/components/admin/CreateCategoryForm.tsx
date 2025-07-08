@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,23 +11,52 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react'
 import { STORAGE_PREFIXES } from '@/lib/storage'
 import Image from 'next/image'
 
+interface Category {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  image: string | null
+  showInHome: boolean
+  active: boolean
+}
+
 interface CreateCategoryFormProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: (category: any) => void
+  onSuccess: (category?: any) => void
+  category?: Category | null // Para modo edición
 }
 
-export function CreateCategoryForm({ isOpen, onClose, onSuccess }: CreateCategoryFormProps) {
+export function CreateCategoryForm({ isOpen, onClose, onSuccess, category }: CreateCategoryFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    image: '',
-    showInHome: false
+    name: category?.name || '',
+    description: category?.description || '',
+    image: category?.image || '',
+    showInHome: category?.showInHome || false,
+    active: category?.active ?? true
   })
+
+  // Reset form when category changes or dialog opens/closes
+  const [isDeleting, setIsDeleting] = useState(false)
+  
+  React.useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: category?.name || '',
+        description: category?.description || '',
+        image: category?.image || '',
+        showInHome: category?.showInHome || false,
+        active: category?.active ?? true
+      })
+      setImageFile(null)
+      setImagePreview(null)
+    }
+  }, [isOpen, category])
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -126,8 +155,13 @@ export function CreateCategoryForm({ isOpen, onClose, onSuccess }: CreateCategor
         image: imageUrl
       }
 
-      const response = await fetch('/api/categories', {
-        method: 'POST',
+      const url = category 
+        ? `/api/categories/${category.id}` 
+        : '/api/categories'
+      const method = category ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -136,11 +170,11 @@ export function CreateCategoryForm({ isOpen, onClose, onSuccess }: CreateCategor
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Error al crear la categoría')
+        throw new Error(error.error || `Error al ${category ? 'actualizar' : 'crear'} la categoría`)
       }
 
-      const newCategory = await response.json()
-      onSuccess(newCategory)
+      const resultCategory = await response.json()
+      onSuccess(resultCategory)
       
       // Reset form
       setFormData({
@@ -162,8 +196,38 @@ export function CreateCategoryForm({ isOpen, onClose, onSuccess }: CreateCategor
     }
   }
 
+  const handleDelete = async () => {
+    if (!category) return
+    
+    if (!confirm(`¿Estás seguro de que quieres eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.`)) {
+      return
+    }
+
+    setIsDeleting(true)
+    
+    try {
+      const response = await fetch(`/api/categories/${category.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Error al eliminar la categoría')
+      }
+
+      onSuccess()
+      onClose()
+      
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      alert(error instanceof Error ? error.message : 'Error al eliminar la categoría')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const handleClose = () => {
-    if (!isLoading && !isUploading) {
+    if (!isLoading && !isUploading && !isDeleting) {
       setFormData({
         name: '',
         description: '',
@@ -180,7 +244,7 @@ export function CreateCategoryForm({ isOpen, onClose, onSuccess }: CreateCategor
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Crear Nueva Categoría</DialogTitle>
+          <DialogTitle>{category ? 'Editar Categoría' : 'Crear Nueva Categoría'}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -276,28 +340,49 @@ export function CreateCategoryForm({ isOpen, onClose, onSuccess }: CreateCategor
             />
           </div>
 
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleClose}
-              disabled={isLoading || isUploading}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isLoading || isUploading}
-            >
-              {isLoading || isUploading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                  {isUploading ? 'Subiendo imagen...' : 'Creando...'}
-                </div>
-              ) : (
-                'Crear Categoría'
-              )}
-            </Button>
+          <DialogFooter className={category ? "flex justify-between" : ""}>
+            {category && (
+              <Button 
+                type="button" 
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isLoading || isUploading || isDeleting}
+                className="mr-auto"
+              >
+                {isDeleting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Eliminando...
+                  </div>
+                ) : (
+                  'Eliminar'
+                )}
+              </Button>
+            )}
+            
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleClose}
+                disabled={isLoading || isUploading || isDeleting}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading || isUploading || isDeleting}
+              >
+                {isLoading || isUploading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    {isUploading ? 'Subiendo imagen...' : (category ? 'Guardando...' : 'Creando...')}
+                  </div>
+                ) : (
+                  category ? 'Guardar Cambios' : 'Crear Categoría'
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

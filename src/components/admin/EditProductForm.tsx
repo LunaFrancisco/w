@@ -9,6 +9,16 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { ArrowLeft, Upload, X, Trash2, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { VariantsManager, ProductVariant } from './VariantsManager'
@@ -49,6 +59,7 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [imageUrls, setImageUrls] = useState<string[]>(
     product.images.length > 0 ? product.images : ['']
   )
@@ -150,10 +161,6 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
   }
 
   const handleDelete = async () => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este producto? Esta acción no se puede deshacer.')) {
-      return
-    }
-
     setIsDeleting(true)
     
     try {
@@ -161,19 +168,51 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
         method: 'DELETE',
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error al eliminar el producto')
-      }
+      const data = await response.json()
 
-      alert('Producto eliminado exitosamente')
-      router.push('/admin/productos')
+      if (response.ok) {
+        alert('Producto eliminado exitosamente')
+        router.push('/admin/productos')
+      } else {
+        alert(data.error || 'Error al eliminar el producto')
+      }
       
     } catch (error) {
       console.error('Error deleting product:', error)
-      alert(error instanceof Error ? error.message : 'Error al eliminar el producto')
+      alert('Error al eliminar el producto')
     } finally {
       setIsDeleting(false)
+      setShowDeleteDialog(false)
+    }
+  }
+
+  const handleDeactivate = async () => {
+    setIsDeleting(true)
+    
+    try {
+      const response = await fetch(`/api/admin/products/${product.slug}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ active: false }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert('Producto desactivado exitosamente')
+        router.push('/admin/productos')
+      } else {
+        alert(data.error || 'Error al desactivar el producto')
+      }
+      
+    } catch (error) {
+      console.error('Error deactivating product:', error)
+      alert('Error al desactivar el producto')
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
     }
   }
 
@@ -203,20 +242,11 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
           type="button"
           variant="destructive"
           size="sm"
-          onClick={handleDelete}
+          onClick={() => setShowDeleteDialog(true)}
           disabled={isDeleting}
         >
-          {isDeleting ? (
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-              Eliminando...
-            </div>
-          ) : (
-            <>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Eliminar Producto
-            </>
-          )}
+          <Trash2 className="h-4 w-4 mr-2" />
+          Eliminar Producto
         </Button>
       </div>
 
@@ -476,6 +506,42 @@ export function EditProductForm({ product, categories }: EditProductFormProps) {
         onClose={() => setIsCategoryFormOpen(false)}
         onSuccess={handleCategoryCreated}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Qué deseas hacer con este producto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Puedes eliminar permanentemente el producto "{product.name}" o desactivarlo para mantener el historial.
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <p className="text-sm text-amber-800">
+                  <strong>Recomendación:</strong> Si el producto tiene pedidos asociados, solo podrás desactivarlo. 
+                  La desactivación es más segura y mantiene el historial.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <Button
+              onClick={handleDeactivate}
+              disabled={isDeleting}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              {isDeleting ? 'Procesando...' : 'Desactivar'}
+            </Button>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar Permanentemente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   )
 }

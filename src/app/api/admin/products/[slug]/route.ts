@@ -283,6 +283,67 @@ export async function PUT(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  try {
+    const session = await auth()
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      )
+    }
+
+    const { slug } = await params
+    const body = await request.json()
+    const { active } = body
+
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { slug }
+    })
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { error: 'Producto no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Update only the active status
+    const updatedProduct = await prisma.product.update({
+      where: { slug },
+      data: { active },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    })
+
+    return NextResponse.json({
+      message: `Producto ${active ? 'activado' : 'desactivado'} exitosamente`,
+      product: {
+        ...updatedProduct,
+        price: Number(updatedProduct.price),
+      },
+    })
+  } catch (error) {
+    console.error('Error updating product status:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
