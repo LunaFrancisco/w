@@ -9,6 +9,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { 
   Search, 
   Grid3x3, 
@@ -26,6 +36,7 @@ import {
   Package2,
   Calculator
 } from 'lucide-react'
+import { CreateCategoryForm } from './CreateCategoryForm'
 
 interface ProductVariant {
   id: string
@@ -61,7 +72,11 @@ interface Product {
 interface Category {
   id: string
   name: string
+  slug: string
+  description: string | null
+  image: string | null
   active: boolean
+  showInHome: boolean
   _count: {
     products: number
   }
@@ -84,13 +99,19 @@ interface ProductsManagementProps {
 export function ProductsManagement({ products, categories, productStats }: ProductsManagementProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('active') // Default to active only
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false)
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === 'all' || product.categoryId === selectedCategory
-    return matchesSearch && matchesCategory
+    const matchesStatus = selectedStatus === 'all' || 
+                         (selectedStatus === 'active' && product.active) ||
+                         (selectedStatus === 'inactive' && !product.active)
+    return matchesSearch && matchesCategory && matchesStatus
   })
 
   const formatPrice = (price: number) => {
@@ -111,6 +132,21 @@ export function ProductsManagement({ products, categories, productStats }: Produ
     return active 
       ? { label: 'Activo', variant: 'secondary' as const, className: 'bg-green-100 text-green-800' }
       : { label: 'Inactivo', variant: 'secondary' as const, className: 'bg-red-100 text-red-800' }
+  }
+
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category)
+    setIsCategoryFormOpen(true)
+  }
+
+  const handleCreateCategory = () => {
+    setEditingCategory(null)
+    setIsCategoryFormOpen(true)
+  }
+
+  const handleCategorySuccess = () => {
+    // Refresh the page to show updated categories
+    window.location.reload()
   }
 
   return (
@@ -173,33 +209,63 @@ export function ProductsManagement({ products, categories, productStats }: Produ
       {/* Categories Overview */}
       <Card className="border-0 shadow-lg">
         <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Categorías
-          </CardTitle>
-          <CardDescription>
-            Distribución de productos por categoría
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Categorías
+              </CardTitle>
+              <CardDescription>
+                Distribución de productos por categoría
+              </CardDescription>
+            </div>
+            <Button
+              onClick={handleCreateCategory}
+              size="lg"
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            >
+              + Crear Categoría
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {categories.map((category) => (
-              <div key={category.id} className="p-4 border-2 border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-md transition-all duration-200">
+              <div 
+                key={category.id} 
+                onClick={() => handleEditCategory(category)}
+                className="p-4 border-2 border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer"
+              >
                 <h3 className="font-semibold text-gray-900 text-lg">{category.name}</h3>
                 <p className="text-sm text-gray-600 mt-1">
                   {category._count.products} productos
                 </p>
-                <Badge 
-                  variant="secondary"
-                  className={`mt-2 ${category.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-                >
-                  {category.active ? 'Activa' : 'Inactiva'}
-                </Badge>
+                <div className="flex items-center justify-between mt-2">
+                  <Badge 
+                    variant="secondary"
+                    className={`${category.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                  >
+                    {category.active ? 'Activa' : 'Inactiva'}
+                  </Badge>
+                  {category.showInHome && (
+                    <Badge variant="outline" className="text-xs">
+                      En Home
+                    </Badge>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* Category Form */}
+      <CreateCategoryForm
+        isOpen={isCategoryFormOpen}
+        onClose={() => setIsCategoryFormOpen(false)}
+        onSuccess={handleCategorySuccess}
+        category={editingCategory}
+      />
 
       {/* Filters and View Controls */}
       <Card className="border-0 shadow-lg">
@@ -215,20 +281,33 @@ export function ProductsManagement({ products, categories, productStats }: Produ
                   className="pl-10"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-                >
-                  <option value="all">Todas las categorías</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-gray-500" />
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  >
+                    <option value="all">Todas las categorías</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  >
+                    <option value="active">Solo activos</option>
+                    <option value="inactive">Solo inactivos</option>
+                    <option value="all">Todos los estados</option>
+                  </select>
+                </div>
               </div>
             </div>
             
@@ -263,6 +342,7 @@ export function ProductsManagement({ products, categories, productStats }: Produ
           <CardDescription>
             {searchTerm && `Resultados para "${searchTerm}"`}
             {selectedCategory !== 'all' && ` en ${categories.find(c => c.id === selectedCategory)?.name}`}
+            {selectedStatus !== 'all' && ` - ${selectedStatus === 'active' ? 'Solo activos' : 'Solo inactivos'}`}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -316,16 +396,114 @@ function StatCard({ title, value, icon: Icon, trend, color }: {
 }
 
 function ProductGrid({ products, formatPrice }: { products: Product[], formatPrice: (price: number) => string }) {
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteProduct = async (product: Product) => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/products/${product.slug}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Refresh the page to show updated products
+        window.location.reload()
+      } else {
+        alert(data.error || 'Error al eliminar el producto')
+      }
+    } catch (error) {
+      alert('Error al eliminar el producto')
+    } finally {
+      setIsDeleting(false)
+      setDeletingProduct(null)
+    }
+  }
+
+  const handleDeactivateProduct = async (product: Product) => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/products/${product.slug}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ active: false }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Refresh the page to show updated products
+        window.location.reload()
+      } else {
+        alert(data.error || 'Error al desactivar el producto')
+      }
+    } catch (error) {
+      alert('Error al desactivar el producto')
+    } finally {
+      setIsDeleting(false)
+      setDeletingProduct(null)
+    }
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map((product) => (
-        <ProductGridCard key={product.id} product={product} formatPrice={formatPrice} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <ProductGridCard 
+            key={product.id} 
+            product={product} 
+            formatPrice={formatPrice}
+            onDelete={() => setDeletingProduct(product)} 
+          />
+        ))}
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Qué deseas hacer con este producto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Puedes eliminar permanentemente el producto "{deletingProduct?.name}" o desactivarlo para mantener el historial.
+              {deletingProduct && (
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-sm text-amber-800">
+                    <strong>Recomendación:</strong> Si el producto tiene pedidos asociados, solo podrás desactivarlo. 
+                    La desactivación es más segura y mantiene el historial.
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <Button
+              onClick={() => deletingProduct && handleDeactivateProduct(deletingProduct)}
+              disabled={isDeleting}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              {isDeleting ? 'Procesando...' : 'Desactivar'}
+            </Button>
+            <AlertDialogAction
+              onClick={() => deletingProduct && handleDeleteProduct(deletingProduct)}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar Permanentemente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
-function ProductGridCard({ product, formatPrice }: { product: Product, formatPrice: (price: number) => string }) {
+function ProductGridCard({ product, formatPrice, onDelete }: { product: Product, formatPrice: (price: number) => string, onDelete: () => void }) {
   const getStockStatus = (stock: number) => {
     if (stock === 0) return { label: 'Sin stock', variant: 'destructive' as const, icon: XCircle }
     if (stock < 10) return { label: 'Stock bajo', variant: 'secondary' as const, icon: AlertTriangle }
@@ -432,6 +610,15 @@ function ProductGridCard({ product, formatPrice }: { product: Product, formatPri
                 Ver
               </Link>
             </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onDelete}
+              className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Eliminar
+            </Button>
           </div>
         </div>
       </CardContent>
@@ -440,32 +627,130 @@ function ProductGridCard({ product, formatPrice }: { product: Product, formatPri
 }
 
 function ProductTable({ products, formatPrice }: { products: Product[], formatPrice: (price: number) => string }) {
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteProduct = async (product: Product) => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/products/${product.slug}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Refresh the page to show updated products
+        window.location.reload()
+      } else {
+        alert(data.error || 'Error al eliminar el producto')
+      }
+    } catch (error) {
+      alert('Error al eliminar el producto')
+    } finally {
+      setIsDeleting(false)
+      setDeletingProduct(null)
+    }
+  }
+
+  const handleDeactivateProduct = async (product: Product) => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/products/${product.slug}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ active: false }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Refresh the page to show updated products
+        window.location.reload()
+      } else {
+        alert(data.error || 'Error al desactivar el producto')
+      }
+    } catch (error) {
+      alert('Error al desactivar el producto')
+    } finally {
+      setIsDeleting(false)
+      setDeletingProduct(null)
+    }
+  }
+
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead className="w-16"></TableHead>
-            <TableHead className="font-semibold">Producto</TableHead>
-            <TableHead className="font-semibold">Categoría</TableHead>
-            <TableHead className="font-semibold">Precio</TableHead>
-            <TableHead className="font-semibold">Stock</TableHead>
-            <TableHead className="font-semibold">Estado</TableHead>
-            <TableHead className="font-semibold">Fecha</TableHead>
-            <TableHead className="font-semibold text-center">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {products.map((product) => (
-            <ProductTableRow key={product.id} product={product} formatPrice={formatPrice} />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <>
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="w-16"></TableHead>
+              <TableHead className="font-semibold">Producto</TableHead>
+              <TableHead className="font-semibold">Categoría</TableHead>
+              <TableHead className="font-semibold">Precio</TableHead>
+              <TableHead className="font-semibold">Stock</TableHead>
+              <TableHead className="font-semibold">Estado</TableHead>
+              <TableHead className="font-semibold">Fecha</TableHead>
+              <TableHead className="font-semibold text-center">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map((product) => (
+              <ProductTableRow 
+                key={product.id} 
+                product={product} 
+                formatPrice={formatPrice}
+                onDelete={() => setDeletingProduct(product)}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Qué deseas hacer con este producto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Puedes eliminar permanentemente el producto "{deletingProduct?.name}" o desactivarlo para mantener el historial.
+              {deletingProduct && (
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-sm text-amber-800">
+                    <strong>Recomendación:</strong> Si el producto tiene pedidos asociados, solo podrás desactivarlo. 
+                    La desactivación es más segura y mantiene el historial.
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <Button
+              onClick={() => deletingProduct && handleDeactivateProduct(deletingProduct)}
+              disabled={isDeleting}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              {isDeleting ? 'Procesando...' : 'Desactivar'}
+            </Button>
+            <AlertDialogAction
+              onClick={() => deletingProduct && handleDeleteProduct(deletingProduct)}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar Permanentemente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
-function ProductTableRow({ product, formatPrice }: { product: Product, formatPrice: (price: number) => string }) {
+function ProductTableRow({ product, formatPrice, onDelete }: { product: Product, formatPrice: (price: number) => string, onDelete: () => void }) {
   const getStockStatus = (stock: number) => {
     if (stock === 0) return { label: 'Sin stock', variant: 'destructive' as const, icon: XCircle }
     if (stock < 10) return { label: 'Stock bajo', variant: 'secondary' as const, icon: AlertTriangle }
@@ -570,6 +855,14 @@ function ProductTableRow({ product, formatPrice }: { product: Product, formatPri
             <Link href={`/productos/${product.slug}`} target="_blank">
               <Eye className="h-4 w-4" />
             </Link>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onDelete}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </TableCell>

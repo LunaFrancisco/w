@@ -137,6 +137,7 @@ async function main() {
       slug: 'electronicos',
       description: 'Dispositivos electrónicos de alta gama y tecnología avanzada',
       image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400',
+      showInHome: true,
     },
   })
 
@@ -146,6 +147,7 @@ async function main() {
       slug: 'moda-accesorios',
       description: 'Ropa y accesorios de marcas premium y diseñadores exclusivos',
       image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400',
+      showInHome: true,
     },
   })
 
@@ -155,6 +157,7 @@ async function main() {
       slug: 'hogar-decoracion',
       description: 'Artículos premium para el hogar y decoración de interiores',
       image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
+      showInHome: true,
     },
   })
 
@@ -164,6 +167,7 @@ async function main() {
       slug: 'deportes-fitness',
       description: 'Equipamiento deportivo de alta calidad y marcas reconocidas',
       image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400',
+      showInHome: false,
     },
   })
 
