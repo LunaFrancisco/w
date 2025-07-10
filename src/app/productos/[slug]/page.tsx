@@ -75,7 +75,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       <div className="container mx-auto px-4 py-8">
         <Suspense fallback={
           <div className="flex items-center justify-center py-12">
