@@ -7,6 +7,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const hideEmpty = searchParams.get('hideEmpty') === 'true'
 
+    // Cache headers
+    const headers = {
+      'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+    }
+
     const categories = await prisma.category.findMany({
       where: {
         active: true,
@@ -24,23 +29,14 @@ export async function GET(request: Request) {
         slug: true,
         description: true,
         image: true,
-        showInHome: true,
-        _count: {
-          select: {
-            products: {
-              where: {
-                active: true
-              }
-            }
-          }
-        }
+        showInHome: true
       },
       orderBy: {
         name: 'asc'
       }
     })
 
-    return NextResponse.json(categories)
+    return NextResponse.json(categories, { headers })
 
   } catch (error) {
     console.error('Error fetching categories:', error)

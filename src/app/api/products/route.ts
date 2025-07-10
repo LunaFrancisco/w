@@ -5,6 +5,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     
+    // Cache headers - menos cache para productos que cambian más
+    const headers = {
+      'Cache-Control': 'public, max-age=60, stale-while-revalidate=120',
+    }
+    
     // Parse query parameters
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '12')
@@ -79,11 +84,20 @@ export async function GET(request: NextRequest) {
     // Calculate pagination
     const skip = (page - 1) * limit
 
-    // Execute queries
+    // Execute queries - Solo cargar variantes si es necesario
     const [products, totalCount] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          price: true,
+          stock: true,
+          images: true,
+          featured: true,
+          allowIndividualSale: true,
           category: {
             select: {
               id: true,
@@ -93,6 +107,13 @@ export async function GET(request: NextRequest) {
           },
           variants: {
             where: { active: true },
+            select: {
+              id: true,
+              name: true,
+              units: true,
+              price: true,
+              isDefault: true
+            },
             orderBy: { units: 'asc' }
           }
         },
@@ -138,7 +159,7 @@ export async function GET(request: NextRequest) {
       totalCount,
       hasNextPage: page < totalPages,
       hasPreviousPage: page > 1,
-    })
+    }, { headers })
 
   } catch (error) {
     console.error('Error fetching products:', error)

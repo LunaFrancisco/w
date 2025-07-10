@@ -109,7 +109,10 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <Link href={`/productos/${product.slug}`}>
+    <Link 
+      href={`/productos/${product.slug}`}
+      prefetch={true}
+    >
       <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
         {/* Product Image */}
         <div className="aspect-square relative overflow-hidden bg-gray-100">
@@ -120,6 +123,10 @@ export function ProductCard({ product }: ProductCardProps) {
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-200"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyBYXZMBQeT6RkS8bXDqKlqHKlBb0HE6fmBE5xeKvqlCXNpKxhjjc3ksrVmPCp0nzQthPOISuCMQqjhJy2/Wl3kn6+yqXawSa1gSXzRBWgB/G/Dxn9Kq8nH3JJHsRp3PG2Cty3UtqhNDbE6fYE/Dp+iqjI19fFp0LJKh5H1Q1f//9k="
+              priority={product.featured}
+              loading={product.featured ? "eager" : "lazy"}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -152,9 +159,9 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="p-4">
           {/* Category and Variants indicator */}
           <div className="flex items-center justify-between mb-1">
-            <div className="text-xs text-blue-600 font-medium uppercase tracking-wide">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border">
               {product.category.name}
-            </div>
+            </span>
             {product.variants && product.variants.length > 0 && (
               <div className="flex items-center gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
                 <Package2 className="h-3 w-3" />
@@ -168,18 +175,14 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </h3>
 
-          {/* Description */}
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-            {product.description}
-          </p>
 
           {/* Price and Stock */}
           <div className="flex items-center justify-between mb-3">
             <div className="text-lg font-bold text-gray-900">
               {getPriceRange()}
             </div>
-            <div className="text-sm text-gray-500">
-              Stock: {product.stock}
+            <div className={`text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {product.stock > 0 ? 'Disponible' : 'No Disponible'}
             </div>
           </div>
 
@@ -189,7 +192,7 @@ export function ProductCard({ product }: ProductCardProps) {
             disabled={product.stock === 0 || isLoading}
             className={`w-full py-2 px-4 rounded-md font-medium text-sm transition-colors ${
               product.stock === 0
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300'
                 : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
             } ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
           >

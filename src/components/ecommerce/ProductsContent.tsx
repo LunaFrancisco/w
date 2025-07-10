@@ -6,6 +6,7 @@ import { ProductCard } from './ProductCard'
 import { ProductFilters } from './ProductFilters'
 import { ProductSearch } from './ProductSearch'
 import { Pagination } from './Pagination'
+import { ProductCardSkeleton } from '../ui/product-skeleton'
 
 interface ProductVariant {
   id: string
@@ -25,6 +26,7 @@ interface Product {
   stock: number
   images: string
   featured: boolean
+  allowIndividualSale: boolean
   category: {
     id: string
     name: string
@@ -56,8 +58,11 @@ export function ProductsContent() {
 
   useEffect(() => {
     fetchProducts()
-    fetchCategories()
   }, [search, category, sortBy, minPrice, maxPrice, currentPage])
+
+  useEffect(() => {
+    fetchCategories()
+  }, []) // Solo cargar categorías una vez
 
   const fetchProducts = async () => {
     try {
@@ -150,13 +155,8 @@ export function ProductsContent() {
         {/* Products grid */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
-                <div className="aspect-square bg-gray-200 rounded-md mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-              </div>
+            {Array.from({ length: 9 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : products.length === 0 ? (
