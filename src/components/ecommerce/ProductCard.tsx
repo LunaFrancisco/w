@@ -145,20 +145,12 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
-          {/* Stock badge */}
-          {product.stock === 0 && (
-            <div className="absolute top-3 right-3">
-              <span className="bg-red-600 text-white text-xs font-medium px-2 py-1 rounded-full">
-                Agotado
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Product Info */}
-        <div className="p-4">
+        <div className="p-2 sm:p-4">
           {/* Category and Variants indicator */}
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-1 sm:mb-1">
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border">
               {product.category.name}
             </span>
@@ -171,18 +163,15 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Product Name */}
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+          <h3 className="font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
             {product.name}
           </h3>
 
 
-          {/* Price and Stock */}
-          <div className="flex items-center justify-between mb-3">
+          {/* Price */}
+          <div className="mb-2 sm:mb-3">
             <div className="text-lg font-bold text-gray-900">
               {getPriceRange()}
-            </div>
-            <div className={`text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {product.stock > 0 ? 'Disponible' : 'No Disponible'}
             </div>
           </div>
 
@@ -202,7 +191,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 Agregando...
               </div>
             ) : product.stock === 0 ? (
-              'Producto Agotado'
+              'Agotado'
             ) : !product.allowIndividualSale || (product.variants && product.variants.length > 0) ? (
               'Ver Opciones'
             ) : (
