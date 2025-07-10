@@ -4,7 +4,7 @@ import { Home, ShoppingBag } from 'lucide-react'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-background pt-16">
       <div className="text-center px-4">
         <div className="mb-8">
           <div className="flex items-center justify-center mb-6">
