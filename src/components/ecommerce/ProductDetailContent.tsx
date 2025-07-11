@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Heart, Share2, Star, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Zap, Package, Check, X, ShoppingBag, Eye, Users, Clock, Award, Gift, Package2, Calculator } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, Zap, Package, Check, X, ShoppingBag, Clock, Award, Gift, Package2, Calculator } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 
 interface ProductVariant {
@@ -41,7 +41,6 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
-  const [isFavorite, setIsFavorite] = useState(false)
   const [showImageZoom, setShowImageZoom] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [addedToCart, setAddedToCart] = useState(false)
@@ -102,21 +101,6 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
     return { savings, percentage }
   }
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product.name,
-          text: product.description,
-          url: window.location.href,
-        })
-      } catch (error) {
-        console.log('Error sharing:', error)
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-    }
-  }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -176,6 +160,9 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
                 fill
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                 priority
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyBYXZMBQeT6RkS8bXDqKlqHKlBb0HE6fmBE5xeKvqlCXNpKxhjjc3ksrVmPCp0nzQthPOISuCMQqjhJy2/Wl3kn6+yqXawSa1gSXzRBWgB/G/Dxn9Kq8nH3JJHsRp3PG2Cty3UtqhNDbE6fYE/Dp+iqjI19fFp0LJKh5H1Q1f//9k="
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
               
               {/* Zoom overlay */}
@@ -259,18 +246,6 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
               </div>
             )}
 
-            {/* Live viewers indicator */}
-            <div className="flex items-center space-x-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl px-5 py-3">
-              <div className="flex -space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full border-2 border-white animate-pulse"></div>
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full border-2 border-white animate-pulse animation-delay-1000"></div>
-                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full border-2 border-white animate-pulse animation-delay-2000"></div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Eye className="h-4 w-4 text-purple-600" />
-                <span className="text-sm font-medium text-gray-700">{viewCount} personas viendo este producto</span>
-              </div>
-            </div>
           </div>
 
           {/* Product Info Section */}
@@ -292,24 +267,19 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
               {product.name}
             </h1>
 
-            {/* Rating with animation */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className={`h-6 w-6 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'} transition-all duration-300 hover:scale-125`}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <span className="font-semibold text-gray-900">4.8</span>
-                <span>•</span>
-                <span className="flex items-center space-x-1 hover:text-blue-600 cursor-pointer transition-colors">
-                  <Users className="h-4 w-4" />
-                  <span>127 reseñas verificadas</span>
-                </span>
-              </div>
+            {/* Stock Status */}
+            <div className="flex items-center space-x-2">
+              {getAvailableStock() > 0 ? (
+                <>
+                  <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-700 font-bold text-xl">Disponible</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                  <span className="text-red-700 font-bold text-xl">Agotado</span>
+                </>
+              )}
             </div>
 
             {/* Format Selection */}
@@ -408,41 +378,6 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
               </div>
             </div>
 
-            {/* Stock Status with progress bar */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  {getAvailableStock() > 0 ? (
-                    <>
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-green-700 font-semibold">En stock</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="text-red-700 font-semibold">Agotado</span>
-                    </>
-                  )}
-                </div>
-                {getAvailableStock() > 0 && (
-                  <span className="text-sm text-gray-600">
-                    {selectedVariant 
-                      ? `${getAvailableStock()} packs disponibles`
-                      : `${product.stock} unidades disponibles`
-                    }
-                  </span>
-                )}
-              </div>
-              {getAvailableStock() > 0 && getAvailableStock() < 50 && (
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${(getAvailableStock() / 50) * 100}%` }}
-                  />
-                </div>
-              )}
-            </div>
-
             {/* Description with glassmorphism */}
             <div className="backdrop-blur-sm bg-white/50 rounded-2xl p-6 border border-gray-100">
               <p className="text-gray-700 text-lg leading-relaxed">
@@ -490,10 +425,10 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
               <button
                 onClick={handleAddToCart}
                 disabled={getAvailableStock() === 0 || isLoading}
-                className={`relative w-full py-5 px-8 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-xl overflow-hidden group ${
+                className={`relative w-full py-5 px-8 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl overflow-hidden group ${
                   getAvailableStock() === 0
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white hover:shadow-2xl'
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-2 border-gray-400'
+                    : 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white hover:shadow-2xl transform hover:scale-105 active:scale-95'
                 } ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
                 {/* Animated background */}
@@ -526,52 +461,20 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
                 </span>
               </button>
 
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setIsFavorite(!isFavorite)}
-                  className={`flex-1 py-4 px-6 rounded-2xl border-2 font-semibold transition-all duration-300 transform hover:scale-105 ${
-                    isFavorite
-                      ? 'border-red-500 text-red-600 bg-red-50 shadow-lg'
-                      : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:shadow-md bg-white'
-                  }`}
-                >
-                  <Heart 
-                    className={`h-5 w-5 mr-2 inline transition-all duration-300 ${
-                      isFavorite ? 'fill-current animate-heartbeat' : ''
-                    }`} 
-                  />
-                  {isFavorite ? 'En favoritos' : 'Favoritos'}
-                </button>
-                
-                <button
-                  onClick={handleShare}
-                  className="flex-1 py-4 px-6 rounded-2xl border-2 border-gray-300 text-gray-700 font-semibold hover:border-gray-400 transition-all duration-300 transform hover:scale-105 bg-white hover:shadow-md"
-                >
-                  <Share2 className="h-5 w-5 mr-2 inline" />
-                  Compartir
-                </button>
-              </div>
+              <button
+                onClick={handleAddToCart}
+                disabled={getAvailableStock() === 0 || isLoading}
+                className={`w-full py-4 px-6 rounded-2xl border-2 font-semibold transition-all duration-300 transform hover:scale-105 ${
+                  getAvailableStock() === 0
+                    ? 'border-gray-400 bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'border-orange-500 text-orange-600 bg-orange-50 hover:bg-orange-100 hover:shadow-md'
+                }`}
+              >
+                <ShoppingBag className="h-5 w-5 mr-2 inline" />
+                {getAvailableStock() === 0 ? 'Producto Agotado' : 'Comprar Ahora'}
+              </button>
             </div>
 
-            {/* Trust Badges with hover effects */}
-            <div className="grid grid-cols-3 gap-4 pt-8 border-t border-gray-200">
-              {[
-                { icon: Truck, color: 'blue', title: 'Envío gratuito', subtitle: 'En pedidos +$50.000' },
-                { icon: Shield, color: 'green', title: 'Compra segura', subtitle: 'Protección garantizada' },
-                { icon: RotateCcw, color: 'purple', title: '30 días', subtitle: 'Devolución gratuita' }
-              ].map((badge, index) => (
-                <div 
-                  key={index}
-                  className="group text-center space-y-2 p-4 rounded-2xl hover:bg-gray-50 transition-all duration-300 cursor-pointer"
-                >
-                  <badge.icon 
-                    className={`h-10 w-10 text-${badge.color}-600 mx-auto group-hover:scale-110 transition-transform duration-300`} 
-                  />
-                  <div className="text-sm font-semibold text-gray-900">{badge.title}</div>
-                  <div className="text-xs text-gray-600">{badge.subtitle}</div>
-                </div>
-              ))}
-            </div>
 
             {/* Limited time offer */}
             <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-4 flex items-center space-x-3 border border-yellow-200">

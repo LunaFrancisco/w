@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { ProductDetailContent } from '@/components/ecommerce/ProductDetailContent'
+import { ProductDetailSkeleton } from '@/components/ui/product-skeleton'
 
 interface ProductDetailPageProps {
   params: {
@@ -77,11 +78,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       <div className="container mx-auto px-4 py-8">
-        <Suspense fallback={
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        }>
+        <Suspense fallback={<ProductDetailSkeleton />}>
           <ProductDetailContent product={product} />
         </Suspense>
       </div>

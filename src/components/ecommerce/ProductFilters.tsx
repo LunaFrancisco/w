@@ -15,6 +15,7 @@ interface ProductFiltersProps {
   currentSort: string
   minPrice: string
   maxPrice: string
+  onFilterChange?: () => void
 }
 
 export function ProductFilters({ 
@@ -22,7 +23,8 @@ export function ProductFilters({
   currentCategory, 
   currentSort,
   minPrice,
-  maxPrice 
+  maxPrice,
+  onFilterChange 
 }: ProductFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -44,6 +46,7 @@ export function ProductFilters({
     params.delete('page')
     
     router.push(`/productos?${params.toString()}`)
+    onFilterChange?.()
   }
 
   const applyPriceFilter = () => {
@@ -65,6 +68,7 @@ export function ProductFilters({
     params.delete('page')
     
     router.push(`/productos?${params.toString()}`)
+    onFilterChange?.()
   }
 
   const clearFilters = () => {
@@ -76,13 +80,14 @@ export function ProductFilters({
     
     router.push(`/productos?${params.toString()}`)
     setPriceRange({ min: '', max: '' })
+    onFilterChange?.()
   }
 
   const hasActiveFilters = currentCategory || currentSort !== 'name' || minPrice || maxPrice
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="lg:bg-white lg:rounded-lg lg:shadow-sm lg:p-6">
+      <div className="hidden lg:flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Filtros</h3>
         {hasActiveFilters && (
           <button
@@ -90,6 +95,18 @@ export function ProductFilters({
             className="text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
             Limpiar filtros
+          </button>
+        )}
+      </div>
+      
+      {/* Mobile clear filters button */}
+      <div className="lg:hidden mb-6">
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2"
+          >
+            Limpiar todos los filtros
           </button>
         )}
       </div>
@@ -204,6 +221,7 @@ export function ProductFilters({
                 params.delete('page')
                 router.push(`/productos?${params.toString()}`)
                 setPriceRange({ min: filter.min || '', max: filter.max || '' })
+                onFilterChange?.()
               }}
               className="block w-full text-left text-sm text-blue-600 hover:text-blue-700 py-1"
             >

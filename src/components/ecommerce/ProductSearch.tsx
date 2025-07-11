@@ -73,7 +73,7 @@ export function ProductSearch({ initialValue }: ProductSearchProps) {
 
       {/* Search suggestions could go here */}
       {/* Popular searches */}
-      {!searchTerm && (
+      {/* {!searchTerm && (
         <div className="mt-3">
           <p className="text-xs text-gray-500 mb-2">Búsquedas populares:</p>
           <div className="flex flex-wrap gap-2">
@@ -88,7 +88,7 @@ export function ProductSearch({ initialValue }: ProductSearchProps) {
             ))}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   )
 }

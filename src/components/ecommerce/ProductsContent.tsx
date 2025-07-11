@@ -6,6 +6,9 @@ import { ProductCard } from './ProductCard'
 import { ProductFilters } from './ProductFilters'
 import { ProductSearch } from './ProductSearch'
 import { Pagination } from './Pagination'
+import { ProductCardSkeleton } from '../ui/product-skeleton'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet'
+import { Filter } from 'lucide-react'
 
 interface ProductVariant {
   id: string
@@ -25,6 +28,7 @@ interface Product {
   stock: number
   images: string
   featured: boolean
+  allowIndividualSale: boolean
   category: {
     id: string
     name: string
@@ -46,6 +50,7 @@ export function ProductsContent() {
   const [error, setError] = useState<string | null>(null)
   const [totalPages, setTotalPages] = useState(1)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   
   const searchParams = useSearchParams()
   const search = searchParams.get('search') || ''
@@ -56,8 +61,11 @@ export function ProductsContent() {
 
   useEffect(() => {
     fetchProducts()
-    fetchCategories()
   }, [search, category, sortBy, minPrice, maxPrice, currentPage])
+
+  useEffect(() => {
+    fetchCategories()
+  }, []) // Solo cargar categorías una vez
 
   const fetchProducts = async () => {
     try {
@@ -119,8 +127,8 @@ export function ProductsContent() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
-      {/* Sidebar with filters */}
-      <div className="lg:w-1/4">
+      {/* Desktop Sidebar with filters */}
+      <div className="hidden lg:block lg:w-1/4">
         <ProductFilters 
           categories={categories}
           currentCategory={category}
@@ -132,9 +140,38 @@ export function ProductsContent() {
 
       {/* Main content */}
       <div className="lg:w-3/4">
-        {/* Search bar */}
+        {/* Search bar and mobile filter button */}
         <div className="mb-6">
-          <ProductSearch initialValue={search} />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <ProductSearch initialValue={search} />
+            </div>
+            
+            {/* Mobile filter button */}
+            <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+              <SheetTrigger asChild>
+                <button className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Filter className="h-4 w-4" />
+                  Filtros
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[85%] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle>Filtros</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <ProductFilters 
+                    categories={categories}
+                    currentCategory={category}
+                    currentSort={sortBy}
+                    minPrice={minPrice}
+                    maxPrice={maxPrice}
+                    onFilterChange={() => setIsFilterSheetOpen(false)}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
         {/* Results summary */}
@@ -149,14 +186,9 @@ export function ProductsContent() {
 
         {/* Products grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
-                <div className="aspect-square bg-gray-200 rounded-md mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-              </div>
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : products.length === 0 ? (
@@ -171,7 +203,7 @@ export function ProductsContent() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
